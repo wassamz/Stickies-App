@@ -1,0 +1,34 @@
+# Node modules, since we install them in the image
+node_modules/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Hidden files
+.git
+.svn
+.hg
+.npm
+.vscode
+.idea
+
+# Logs and build artifacts
+logs
+build
+dist
+
+# Test results
+test-results
+
+# IDE specific files
+*.suo
+*.ntvs*
+*.ncb
+*.sdf
+*.suo
+*.user
+*.sln
+*.aps
+*.pch
+*.obj

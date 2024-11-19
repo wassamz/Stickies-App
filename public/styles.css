@@ -1,0 +1,32 @@
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  font-family: "Montserrat", sans-serif;
+  height: 100%;
+  width: 100%;
+  background: #eee;
+  background-attachment: fixed;
+  background-size: cover;
+  background-image: url("img/confetti-doodles.svg");
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  flex: 1;
+  min-height: 0;
+  padding: 0px;
+}
+
+.main {
+  flex: auto;
+  overflow: auto;
+}
