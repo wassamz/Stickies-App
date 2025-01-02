@@ -4,15 +4,16 @@ import NotesIcon from "@mui/icons-material/Notes";
 import Search from "./Search.js";
 import { getToken, clearTokens } from "../../util/auth.js";
 import "./styles/Header.css";
+import { useUserProfile } from '../../context/UserContext';
 
 // Prop Types validation
 Header.propTypes = {
-  onSearch: PropTypes.func.isRequired, 
-  userData: PropTypes.object.isRequired,
+  onSearch: PropTypes.func.isRequired
 };
 
-function Header({ onSearch, userData }) {
+function Header({ onSearch }) {
   let navigate = useNavigate();
+  const {user}  = useUserProfile();
 
   function handleLogout() {
     clearTokens();
@@ -27,7 +28,7 @@ function Header({ onSearch, userData }) {
       {(String(onSearch) !== "() => {}")  ? <Search onSearch={onSearch}></Search> : <div></div>}
       {getToken() ? (
         <div className="button-container">
-          <h2 className="user">{userData?.email}</h2>
+          <h2 className="user">{user?.email}</h2>
           <button data-testid="logout-button" type="submit" className="submit-btn" onClick={handleLogout}>
             Logout
           </button>

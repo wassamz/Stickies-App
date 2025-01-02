@@ -1,4 +1,4 @@
-import { useState} from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
@@ -6,11 +6,14 @@ import LoginForm from "../components/LoginForm";
 import SignUpForm from "../components/SignUpForm";
 import Error from "../components/common/Error";
 import Info from "../components/common/Info";
+import { useUserProfile } from "../context/UserContext";
 
 import { login, signUp } from "../services/Api";
 
 function Auth() {
   let navigate = useNavigate();
+  const { setUser } = useUserProfile();
+
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState(null);
   const [info, setInfo] = useState(null);
@@ -31,10 +34,11 @@ function Auth() {
     } else {
       setError(null); // Clear error on successful login/signup
       setInfo(result.message);
+      data.password = ""; //clear the password
+      setUser(data); //save the user data in context
 
       navigate("/notes", {
         replace: true,
-        state: { userData: data }, // Pass user data to Notes Page
       });
     }
   }

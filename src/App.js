@@ -1,4 +1,5 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { UserProvider } from "./context/UserContext";
 import Auth from "./pages/Auth";
 import Notes from "./pages/Notes";
 import ErrorPage from "./pages/ErrorPage";
@@ -30,9 +31,11 @@ const router = createBrowserRouter(
 
 function App() {
   return (
-    <div className="container">
-      <RouterProvider router={router} future={{ v7_startTransition: true }} />
-    </div>
+    <UserProvider>
+      
+        <RouterProvider router={router} future={{ v7_startTransition: true }} />
+      
+    </UserProvider>
   );
 }
 
