@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import AddNote from "../components/AddNote";
 import Error from "../components/common/Error";
 import Footer from "../components/common/Footer";
@@ -21,8 +21,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const location = useLocation();
-  const userData = location.state?.userData;
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -125,7 +124,7 @@ function App() {
 
   return (
     <div className="main">
-      <Header onSearch={handleSearchChange} userData={{ userData }} />
+      <Header onSearch={handleSearchChange} />
       {renderContent()}
       <Footer />
     </div>

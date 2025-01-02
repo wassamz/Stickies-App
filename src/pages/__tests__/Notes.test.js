@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createNote, notes, removeNote, updateNote } from "../../services/Api";
+import { UserProvider, useUserProfile } from "../../context/UserContext";
 import Notes from "../Notes";
 
 jest.mock("../../services/Api", () => ({
@@ -14,15 +15,20 @@ jest.mock("react-router-dom", () => ({
   useNavigate: jest.fn(),
   useLocation: jest.fn(),
 }));
+// Mock the UserContext
+jest.mock("../../context/UserContext", () => ({
+  UserProvider: ({ children }) => <div>{children}</div>, // Simple mock provider
+  useUserProfile: jest.fn(),
+}));
 
 describe("Notes Component", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-
     const mockNavigate = jest.fn();
-    const mockLocation = { state: { userData: { name: "Test User" } } };
+
     require("react-router-dom").useNavigate.mockReturnValue(mockNavigate);
-    require("react-router-dom").useLocation.mockReturnValue(mockLocation);
+
+    useUserProfile.mockReturnValue({ user: { email: "mocktest@example.com" } });
 
     notes.mockResolvedValue([
       { _id: "1", title: "Note 1", content: "Content 1" },
@@ -35,7 +41,11 @@ describe("Notes Component", () => {
       () => new Promise((resolve) => setTimeout(() => resolve([]), 100))
     );
 
-    render(<Notes />);
+    render(
+      <UserProvider>
+        <Notes />
+      </UserProvider>
+    );
 
     expect(screen.getByText("Loading...")).toBeInTheDocument();
 
@@ -50,7 +60,11 @@ describe("Notes Component", () => {
     const errorMessage = "Failed to fetch notes";
     notes.mockRejectedValueOnce(new Error(errorMessage));
 
-    render(<Notes />);
+    render(
+      <UserProvider>
+        <Notes />
+      </UserProvider>
+    );
 
     // Wait for the loading state to disappear
     await waitFor(() => {
@@ -76,7 +90,11 @@ describe("Notes Component", () => {
     const mockResult = { _id: newNoteId, ...newNote };
     createNote.mockResolvedValueOnce(mockResult);
 
-    render(<Notes />);
+    render(
+      <UserProvider>
+        <Notes />
+      </UserProvider>
+    );
 
     await waitFor(() => {
       expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
@@ -119,7 +137,11 @@ describe("Notes Component", () => {
     notes.mockResolvedValue(initialNotes);
     updateNote.mockResolvedValue({ status: "success" });
 
-    render(<Notes />);
+    render(
+      <UserProvider>
+        <Notes />
+      </UserProvider>
+    );
 
     await waitFor(() => {
       expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
@@ -161,7 +183,11 @@ describe("Notes Component", () => {
     notes.mockResolvedValue(initialNotes);
     removeNote.mockResolvedValue({ status: "success" });
 
-    render(<Notes />);
+    render(
+      <UserProvider>
+        <Notes />
+      </UserProvider>
+    );
 
     await waitFor(() => {
       expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
@@ -195,7 +221,11 @@ describe("Notes Component", () => {
 
     notes.mockResolvedValue(initialNotes);
 
-    render(<Notes />);
+    render(
+      <UserProvider>
+        <Notes />
+      </UserProvider>
+    );
 
     // Wait for notes to be loaded
     await waitFor(() => {
