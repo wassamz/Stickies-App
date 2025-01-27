@@ -56,6 +56,7 @@ input[type="password"] {
   justify-content: flex-end;
   gap: 10px;
   margin-top: 20px;
+  flex-wrap: wrap;
 }
 
 .submit-btn {
@@ -67,15 +68,20 @@ input[type="password"] {
   border-radius: 4px;
   cursor: pointer;
   transition: background 0.3s;
-  width: 150px;
+  width: 160px;
 }
 
 .submit-btn:hover {
   background-color: #005f5f;
 }
+.submit-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  color: #666666;
+}
 
 .alter-btn {
-  padding: 5px;
+  padding: 10px 20px;
   font-size: 1em;
   color: #007b7f;
   background-color: transparent;
@@ -83,11 +89,39 @@ input[type="password"] {
   border-radius: 4px;
   cursor: pointer;
   transition: background 0.3s, color 0.3s;
-  width: 150px;
-  margin-right: 20px;
+  width: 160px;
+}
+
+.alter-btn .alter-btn-center{
+  outline: none;
+  border: none;
 }
 
 .alter-btn:hover {
   background-color: #007b7f;
   color: #ffffff;
+}
+
+.otp-info-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.text-button {
+  background: none;
+  border: none;
+  box-shadow: none;
+  color: #007b7f;
+  cursor: pointer;
+  font-size: 1em;
+  padding: 0;
+  text-decoration: underline;
+  transition: color 0.3s;
+  width: 160px;
+}
+
+.text-button:hover {
+  color: #005f5f;
 }
