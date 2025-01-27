@@ -1,14 +1,20 @@
-import { useState } from "react";
 import PropTypes from "prop-types";
+import { useState } from "react";
+import { authFormType, showForm } from "../util/auth";
+import {
+  errorReason,
+  validEmail,
+  validPassword,
+} from "../util/inputValidation";
 import "./styles/Form.css";
 
-// Prop Types validation
 LoginForm.propTypes = {
   submit: PropTypes.func.isRequired,
   toggleForm: PropTypes.func.isRequired,
+  errorMessage: PropTypes.func.isRequired,
 };
 
-function LoginForm({ submit, toggleForm }) {
+function LoginForm({ submit, toggleForm, errorMessage }) {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -21,8 +27,18 @@ function LoginForm({ submit, toggleForm }) {
     });
   };
 
+  const handleShowForm = showForm(setFormData, toggleForm);
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!validEmail(formData.email)) {
+      errorMessage(errorReason.EMAIL_INVALID);
+      return;
+    }
+    if (!validPassword(formData.password)) {
+      errorMessage(errorReason.PASSWORD_INVALID);
+      return;
+    }
     submit(formData);
   };
 
@@ -59,14 +75,12 @@ function LoginForm({ submit, toggleForm }) {
 
           <div className="button-container">
             <button
-              data-testid="sign-up-user-button"
+              data-testid="sign-up-user-form-button"
               type="button"
               className="alter-btn"
-              onClick={() => {
-                toggleForm(true);
-              }}
+              onClick={() => handleShowForm(authFormType.SIGNUP)}
             >
-              Create Account
+              Sign Up
             </button>
             <button
               data-testid="login-user-button"
@@ -74,6 +88,14 @@ function LoginForm({ submit, toggleForm }) {
               className="submit-btn"
             >
               Login
+            </button>
+          </div>
+          <div className="wrapper">
+            <button
+              className="text-button"
+              onClick={() => handleShowForm(authFormType.RESET)}
+            >
+              Forgot Password?
             </button>
           </div>
         </form>
