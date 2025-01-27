@@ -1,30 +1,46 @@
-import { useState } from "react";
 import PropTypes from "prop-types";
+import { useState } from "react";
+import { authFormType, showForm } from "../util/auth";
+import {
+  errorReason,
+  validEmail,
+  validPassword,
+} from "../util/inputValidation";
 import "./styles/Form.css";
 
-// Prop Types validation
 SignUpForm.propTypes = {
   submit: PropTypes.func.isRequired,
   toggleForm: PropTypes.func.isRequired,
+  errorMessage: PropTypes.func.isRequired,
 };
 
-function SignUpForm({ submit, toggleForm }) {
+function SignUpForm({ submit, toggleForm, errorMessage }) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
   });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    submit(formData);
-  };
-
-  const handleChange = (event) => {
+  const handleChange = (e) => {
     setFormData({
       ...formData,
-      [event.target.name]: event.target.value,
+      [e.target.name]: e.target.value,
     });
+  };
+
+  const handleShowForm = showForm(setFormData, toggleForm);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!validEmail(formData.email)) {
+      errorMessage(errorReason.EMAIL_INVALID);
+      return;
+    }
+    if (!validPassword(formData.password)) {
+      errorMessage(errorReason.PASSWORD_INVALID);
+      return;
+    }
+    submit(formData);
   };
 
   return (
@@ -32,7 +48,6 @@ function SignUpForm({ submit, toggleForm }) {
       <div className="auth-container">
         <form onSubmit={handleSubmit} className="auth-form">
           <h2 className="auth-title">My Stickies Sign Up</h2>
-
           <div className="form-group">
             <label htmlFor="name">Name</label>
             <input
@@ -40,6 +55,7 @@ function SignUpForm({ submit, toggleForm }) {
               type="text"
               id="name"
               name="name"
+              minLength="2"
               required
               value={formData.name}
               onChange={handleChange}
@@ -57,7 +73,6 @@ function SignUpForm({ submit, toggleForm }) {
               onChange={handleChange}
             />
           </div>
-
           <div className="form-group">
             <label htmlFor="password">Password</label>
             <input
@@ -76,18 +91,16 @@ function SignUpForm({ submit, toggleForm }) {
               data-testid="login-user-button"
               type="button"
               className="alter-btn"
-              onClick={() => {
-                toggleForm(true);
-              }}
+              onClick={() => handleShowForm(authFormType.LOGIN)}
             >
-              Login
+              Back to Login
             </button>
             <button
               data-testid="sign-up-user-button"
               type="submit"
               className="submit-btn"
             >
-              Create Account
+              Sign Up
             </button>
           </div>
         </form>
