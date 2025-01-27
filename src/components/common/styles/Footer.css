@@ -1,11 +1,10 @@
 footer {
-  justify-content: center; /* Center items horizontally */
+  justify-content: center; 
   text-align: center;
-  align-items: center; /* Center items vertically */
-  max-width: 1200px; /* Limit the maximum width */
+  align-items: center; 
   width: 100%;
   height: 2.5rem;
-  background-color: #007b7f; /* Match footer color with header */
+  background-color: #007b7f; 
   color: #fff;
   position: fixed; /* Fix the footer to the bottom */
   bottom: 0;
