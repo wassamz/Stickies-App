@@ -4,11 +4,20 @@ import LoginForm from "../LoginForm";
 // Mock functions to use in place of the actual submit and toggleForm props
 const mockSubmit = jest.fn();
 const mockToggleForm = jest.fn();
+const mockError = jest.fn();
+const mockInfo = jest.fn();
 
 describe("LoginForm Component", () => {
   beforeEach(() => {
     // Render the LoginForm component before each test
-    render(<LoginForm submit={mockSubmit} toggleForm={mockToggleForm} />);
+    render(
+      <LoginForm
+        submit={mockSubmit}
+        toggleForm={mockToggleForm}
+        errorMessage={mockError}
+        infoMessage={mockInfo}
+      />
+    );
   });
 
   it("renders correctly", () => {
@@ -16,7 +25,7 @@ describe("LoginForm Component", () => {
     expect(screen.getByText("My Stickies Login")).toBeInTheDocument();
     expect(screen.getByLabelText(/E-mail/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Password/i)).toBeInTheDocument();
-    expect(screen.getByText("Create Account")).toBeInTheDocument();
+    expect(screen.getByText("Sign Up")).toBeInTheDocument();
     expect(screen.getByText("Login")).toBeInTheDocument();
   });
 
@@ -42,7 +51,7 @@ describe("LoginForm Component", () => {
 
     // Simulate user input
     fireEvent.change(emailInput, { target: { value: "user@example.com" } });
-    fireEvent.change(passwordInput, { target: { value: "password123" } });
+    fireEvent.change(passwordInput, { target: { value: "Password123$" } });
 
     // Simulate form submission
     fireEvent.click(submitButton);
@@ -50,18 +59,22 @@ describe("LoginForm Component", () => {
     // Check if the submit function was called with the form data
     expect(mockSubmit).toHaveBeenCalledWith({
       email: "user@example.com",
-      password: "password123",
+      password: "Password123$",
     });
   });
 
-  it("calls toggleForm function when 'Create Account' button is clicked", () => {
+  it("toggles to Sign Up Form when 'Sign Up' button is clicked", () => {
     // Select the "Create Account" button
-    const createAccountButton = screen.getByTestId("sign-up-user-button");
-    expect(createAccountButton.textContent).toBe("Create Account");
+    const signUpButton = screen.getByTestId("sign-up-user-form-button");
+    expect(signUpButton.textContent).toBe("Sign Up");
     // Simulate button click
-    fireEvent.click(createAccountButton);
+    fireEvent.click(signUpButton);
 
     // Check if the toggleForm function was called with the correct argument
-    expect(mockToggleForm).toHaveBeenCalledWith(true);
+    expect(mockToggleForm).toHaveBeenCalledWith({
+      email: "",
+      password: "",
+      toggleForm: 1,
+    });
   });
 });

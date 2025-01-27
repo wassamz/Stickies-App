@@ -6,6 +6,7 @@ Built on React v18
 
 **User Features:** 
 * User Access
+* Password Reset with OTP
 * Notes CRUD Operations
 * Search
 
