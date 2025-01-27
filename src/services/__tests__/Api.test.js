@@ -1,12 +1,12 @@
-import { setToken } from "../../util/auth";
+import { setToken, statusCode } from "../../util/auth";
 import {
-    api,
-    createNote,
-    login,
-    notes,
-    removeNote,
-    signUp,
-    updateNote,
+  api,
+  createNote,
+  login,
+  notes,
+  removeNote,
+  signUp,
+  updateNote,
 } from "../Api";
 
 jest.mock("axios", () => ({
@@ -27,6 +27,7 @@ jest.mock("../../util/auth", () => ({
   getToken: jest.fn(),
   clearTokens: jest.fn(),
   reject: jest.fn(),
+  statusCode: { SUCCESS: "SUCCESS", ERROR: "ERROR" },
 }));
 
 describe("Api", () => {
@@ -35,7 +36,7 @@ describe("Api", () => {
   });
 
   it("should successfully login with valid credentials and set the access token", async () => {
-    const mockUserData = { email: "test@example.com", password: "password123" };
+    const mockUserData = { email: "test@example.com", password: "Password123$" };
     const mockAccessToken = "mock_access_token";
     const mockResponse = { data: { accessToken: mockAccessToken } };
 
@@ -47,7 +48,10 @@ describe("Api", () => {
       withCredentials: true,
     });
     expect(setToken).toHaveBeenCalledWith(mockAccessToken);
-    expect(result).toEqual({ status: "SUCCESS", message: "Login Successful" });
+    expect(result).toEqual({
+      status: statusCode.SUCCESS,
+      message: "Login Successful",
+    });
   });
 
   it("should handle login failure and return an error message", async () => {
@@ -65,7 +69,10 @@ describe("Api", () => {
       withCredentials: true,
     });
     expect(setToken).not.toHaveBeenCalled();
-    expect(result).toEqual({ status: "ERROR", message: "Unable to login" });
+    expect(result).toEqual({
+      status: statusCode.ERROR,
+      message: "Unable to login",
+    });
   });
 
   it("should successfully sign up a new user and set the access token", async () => {
@@ -84,7 +91,10 @@ describe("Api", () => {
       withCredentials: true,
     });
     expect(setToken).toHaveBeenCalledWith(mockAccessToken);
-    expect(result).toEqual({ status: "SUCCESS", message: "User Created" });
+    expect(result).toEqual({
+      status: statusCode.SUCCESS,
+      message: "User Created",
+    });
   });
 
   it("should handle sign up failure and return an error message", async () => {
@@ -103,7 +113,7 @@ describe("Api", () => {
     });
     expect(setToken).not.toHaveBeenCalled();
     expect(result).toEqual({
-      status: "ERROR",
+      status: statusCode.ERROR,
       message: "Unable to create user",
     });
   });
@@ -163,5 +173,4 @@ describe("Api", () => {
     expect(api.delete).toHaveBeenCalledWith(`/notes/${mockNoteId}`);
     expect(result).toEqual(mockDeletionConfirmation);
   });
-
 });

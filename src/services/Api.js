@@ -1,5 +1,11 @@
 import axios from "axios";
-import { clearTokens, getToken, reject, setToken } from "../util/auth";
+import {
+  clearTokens,
+  getToken,
+  reject,
+  setToken,
+  statusCode,
+} from "../util/auth";
 
 // Create an Axios instance
 const api = axios.create({
@@ -83,13 +89,13 @@ const login = async (userData) => {
       withCredentials: true,
     });
     const accessToken = response.data.accessToken;
+    
     if (accessToken) {
       setToken(accessToken);
-      return { status: "SUCCESS", message: "Login Successful" };
+      return { status: statusCode.SUCCESS, message: "Login Successful" };
     }
   } catch (error) {
-    //console.error("Unable to login: ", error);
-    return { status: "ERROR", message: "Unable to login" };
+    return { status: statusCode.ERROR, message: "Unable to login" };
   }
 };
 
@@ -104,10 +110,47 @@ const signUp = async (userData) => {
     const accessToken = response.data.accessToken;
     if (accessToken) {
       setToken(accessToken);
-      return { status: "SUCCESS", message: "User Created" };
+      return { status: statusCode.SUCCESS, message: "User Created" };
     }
   } catch (error) {
-    return { status: "ERROR", message: "Unable to create user" };
+    return { status: statusCode.ERROR, message: "Unable to create user" };
+  }
+};
+
+const forgotPassword = async (email) => {
+  if (!email) {
+    throw new Error("Please provide an email address");
+  }
+  try {
+    const response = await api.post("/users/forgotPassword", { email: email });
+    if (response.status === 200)
+      return {
+        status: statusCode.SUCCESS,
+        message: "OTP has been sent to email on file.",
+      };
+    else throw new Error("Forgot Password unsuccessful");
+  } catch (error) {
+    return { status: statusCode.ERROR, message: "Unable to send OTP" };
+  }
+};
+
+const resetPassword = async (email, password, otp) => {
+  if (!email || !password || !otp) {
+    throw new Error(
+      "Unable to reset password, please check your email, password, and OTP"
+    );
+  }
+  try {
+    const response = await api.post("/users/resetPassword", {
+      email: email,
+      newPassword: password,
+      otp: Number(otp),
+    });
+    if (response.status === 200)
+      return { status: statusCode.SUCCESS, message: "Password has been reset" };
+    else throw new Error("Error while attempting to reset password");
+  } catch (error) {
+    return { status: statusCode.ERROR, message: "Unable to reset password" };
   }
 };
 
@@ -153,4 +196,14 @@ const removeNote = async (id) => {
   }
 };
 
-export { api, createNote, login, notes, removeNote, signUp, updateNote };
+export {
+  api,
+  createNote,
+  forgotPassword,
+  login,
+  notes,
+  removeNote,
+  resetPassword,
+  signUp,
+  updateNote,
+};
