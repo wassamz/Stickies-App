@@ -1,9 +1,10 @@
-import { useState } from "react";
-import PropTypes from "prop-types";
-import Zoom from "@mui/material/Zoom";
-import Fab from "@mui/material/Fab";
 import AddIcon from "@mui/icons-material/Add";
 import { green } from "@mui/material/colors";
+import Fab from "@mui/material/Fab";
+import Zoom from "@mui/material/Zoom";
+import PropTypes from "prop-types";
+import { useState } from "react";
+import { MAX_CONTENT_LENGTH, MAX_TITLE_LENGTH } from "../util/note";
 
 // Prop Types validation
 AddNote.propTypes = {
@@ -50,10 +51,10 @@ function AddNote(props) {
             <input
               data-testid="add-note-title"
               name="title"
-              placeholder="Optional Title"
+              placeholder="Optional Short Title"
               onChange={handleChange}
               value={newNote.title}
-              maxLength="15"
+              maxLength={MAX_TITLE_LENGTH}
             />
           </Zoom>
         )}
@@ -64,6 +65,7 @@ function AddNote(props) {
           rows={rows}
           onChange={handleChange}
           value={newNote.content}
+          maxLength={MAX_CONTENT_LENGTH}
         />
         <Zoom
           in={!!newNote.content}
@@ -75,7 +77,7 @@ function AddNote(props) {
               if (newNote.content) {
                 props.onAdd(newNote);
                 setRows(1);
-                setNewNote({ title: "", content: "", });
+                setNewNote({ title: "", content: "" });
               }
             }}
             sx={fabStyle}
