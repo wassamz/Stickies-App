@@ -10,11 +10,17 @@ const router = createBrowserRouter(
     {
       path: "/",
       element: <Auth />,
+      errorElement: <ErrorPage />,
     },
     {
       path: "/notes",
       element: <Notes />,
       loader: checkAuthLoader,
+      errorElement: <ErrorPage />,
+    },
+    {
+      path: "*",
+      element: <ErrorPage />,
       errorElement: <ErrorPage />,
     },
   ],
@@ -32,9 +38,7 @@ const router = createBrowserRouter(
 function App() {
   return (
     <UserProvider>
-      
-        <RouterProvider router={router} future={{ v7_startTransition: true }} />
-      
+      <RouterProvider router={router} future={{ v7_startTransition: true }}/>
     </UserProvider>
   );
 }
