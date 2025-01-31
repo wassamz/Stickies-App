@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { createNote, notes, removeNote, updateNote } from "../../services/Api";
 import { UserProvider, useUserProfile } from "../../context/UserContext";
+import { createNote, notes, removeNote, updateNote } from "../../services/Api";
 import Notes from "../Notes";
 
 jest.mock("../../services/Api", () => ({
@@ -85,6 +85,7 @@ describe("Notes Component", () => {
     const newNote = {
       title: "Test Added Note",
       content: "Test Content for added note",
+      order: 2,
     };
     const newNoteId = "123";
     const mockResult = { _id: newNoteId, ...newNote };
@@ -118,9 +119,8 @@ describe("Notes Component", () => {
     // Wait for the new note to appear on the screen
     await waitFor(() => {
       expect(screen.getByText(newNote.title)).toBeInTheDocument();
-      expect(screen.getByText(newNote.content)).toBeInTheDocument();
     });
-
+    expect(screen.getByText(newNote.content)).toBeInTheDocument();
     // Additional check to ensure the note is actually rendered
     expect(
       screen.getByTestId("edit-note-button" + newNoteId)
@@ -169,9 +169,10 @@ describe("Notes Component", () => {
     // Check if the note list is updated
     await waitFor(() => {
       expect(screen.getByText(updatedNote.title)).toBeInTheDocument();
+    });
+    await waitFor(() => {
       expect(screen.getByText(updatedNote.content)).toBeInTheDocument();
     });
-
     // Verify that updateNote was called with the correct parameters
     expect(updateNote).toHaveBeenCalledWith(updatedNote);
   });
@@ -239,10 +240,9 @@ describe("Notes Component", () => {
     fireEvent.submit(searchBox);
     await waitFor(() => {
       expect(screen.getByText("Note 1")).toBeInTheDocument();
-      expect(screen.getByText("Note 2")).toBeInTheDocument();
-      expect(screen.queryByText("Different title")).not.toBeInTheDocument();
     });
-
+    expect(screen.getByText("Note 2")).toBeInTheDocument();
+    expect(screen.queryByText("Different title")).not.toBeInTheDocument();
     // Test searching for "Different"
     fireEvent.change(searchBox, {
       target: { value: "Different" },
@@ -252,9 +252,9 @@ describe("Notes Component", () => {
 
     await waitFor(() => {
       expect(screen.queryByText("Note 1")).not.toBeInTheDocument();
-      expect(screen.queryByText("Note 2")).not.toBeInTheDocument();
-      expect(screen.getByText("Different title")).toBeInTheDocument();
     });
+    expect(screen.queryByText("Note 2")).not.toBeInTheDocument();
+    expect(screen.getByText("Different title")).toBeInTheDocument();
 
     // Test clearing the search
     fireEvent.change(searchBox, {
@@ -263,8 +263,8 @@ describe("Notes Component", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Note 1")).toBeInTheDocument();
-      expect(screen.getByText("Note 2")).toBeInTheDocument();
-      expect(screen.getByText("Different title")).toBeInTheDocument();
     });
+    expect(screen.getByText("Note 2")).toBeInTheDocument();
+    expect(screen.getByText("Different title")).toBeInTheDocument();
   });
 });

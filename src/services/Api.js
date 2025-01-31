@@ -187,6 +187,11 @@ const updateNote = async (note) => {
   }
 };
 
+const updateNoteOrder = async (notesToUpdate) => {
+  const response = await api.patch("/notes/updateOrder", notesToUpdate);
+  if (response) return response.data;
+};
+
 const removeNote = async (id) => {
   try {
     const response = await api.delete(`/notes/${id}`);
@@ -206,4 +211,5 @@ export {
   resetPassword,
   signUp,
   updateNote,
+  updateNoteOrder,
 };

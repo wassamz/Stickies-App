@@ -40,7 +40,7 @@ function Search(props) {
 
   return (
     <div>
-      <form onSubmit={performSearch}>
+      <form data-testid="search-form" onSubmit={performSearch}>
         <input
           type="text"
           data-testid="search-note-content"
@@ -52,7 +52,7 @@ function Search(props) {
           in={!!searchText}
           style={{ transitionDelay: searchText ? "300ms" : "0ms" }}
         >
-          <Fab data-testid="search-button" sx={fabStyle}>
+          <Fab data-testid="search-button" sx={fabStyle} type="submit">
             <SearchIcon />
           </Fab>
         </Zoom>
