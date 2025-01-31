@@ -1,18 +1,27 @@
-import { useState } from "react";
-import PropTypes from "prop-types";
-import Zoom from "@mui/material/Zoom";
-import Fab from "@mui/material/Fab";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import { green } from "@mui/material/colors";
+import Fab from "@mui/material/Fab";
+import Zoom from "@mui/material/Zoom";
+import PropTypes from "prop-types";
+import { useEffect, useRef, useState } from "react";
+import { MAX_CONTENT_LENGTH, MAX_TITLE_LENGTH } from "../util/note";
 
 // Prop Types validation
 UpdateNote.propTypes = {
   note: PropTypes.object.isRequired,
-  saveUpdate: PropTypes.func.isRequired
+  saveUpdate: PropTypes.func.isRequired,
 };
 function UpdateNote(props) {
   const [updateNote, setUpdateNote] = useState(props.note);
   const [rows, setRows] = useState(1);
+  const contentRef = useRef(null);
+
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.focus();
+    }
+  }, []);
+
   const fabStyle = {
     position: "absolute",
     bottom: -9,
@@ -30,8 +39,7 @@ function UpdateNote(props) {
     let { value, name } = event.target;
     if (value) setRows(expandedRowSize);
     else setRows(reducedRowSize);
-    if(value === "")
-      value = " ";
+    if (value === "") value = " ";
     setUpdateNote((prevState) => ({ ...prevState, [name]: value }));
   }
 
@@ -49,7 +57,7 @@ function UpdateNote(props) {
             placeholder="Title"
             onChange={handleChange}
             value={updateNote?.title}
-            maxLength="15"
+            maxLength={MAX_TITLE_LENGTH}
           />
         </Zoom>
 
@@ -60,6 +68,8 @@ function UpdateNote(props) {
           rows={rows}
           onChange={handleChange}
           value={updateNote?.content}
+          maxLength={MAX_CONTENT_LENGTH}
+          ref={contentRef}
         />
         <Zoom
           in={!!updateNote?.content}
