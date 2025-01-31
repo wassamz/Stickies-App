@@ -1,60 +1,78 @@
-# Stickies 
+# Stickies - Sticky Note Manager
 
-Sticky Note manager UI that connects to the  [Stickies API Backend](https://github.com/wassamz/Stickies-API)
+A user-friendly sticky note manager built with React, Material UI, and integrated with the [Stickies API Backend](https://github.com/wassamz/Stickies-API).
 
-Built on React v18 
+## Features
 
-**User Features:** 
-* User Access
-* Password Reset with OTP
-* Notes CRUD Operations
-* Search
+### User Features:
+- **User Registration & Login** – Create an account and log in securely.
+- **Password Reset with OTP** – Reset your password using a one-time password (OTP).
+- **Notes CRUD Operations** – Create, Read, Update, and Delete sticky notes (via Axios).
+- **Search Functionality** – Quickly find your notes with a search feature.
+- **Draggable Notes** – Organize your notes by dragging them. The order is saved automatically (using `@dnd-kit`).
 
-**Security Features**
-* JWT handling for Access Tokens (Local Storage) and Refresh Tokens (Cookie). 
+### Security Features:
+- **JWT Authentication** – Secure access with JSON Web Tokens (JWT) stored in Local Storage for access tokens, and refresh tokens in Cookies.
 
+---
 
 ## Getting Started
-To start, configure the environment settings: 
-1. PORT - Port for this application to run on
-2. REACT_APP_API_URL - Backend API Server URL 
 
-Once the API server is running, start this UI and create a user, and begin creating your own sticky notes. 
+### Prerequisites
+Before you start, ensure you have the following:
+
+- Node.js (v18 or above) installed.
+- Access to the [Stickies API Backend](https://github.com/wassamz/Stickies-API).
+
+### Configuration
+
+To configure the environment settings:
+
+1. **PORT** - The port on which this application will run.
+2. **REACT_APP_API_URL** - URL of the backend API server.
+3. **REACT_APP_NOTE_*** - Configurable character limits for sticky notes.
+
+---
+
+### Running the Application
+
+Once your API server is up and running, you can start the UI:
+
+1. **Create a user** and start managing your sticky notes!
+
+---
 
 ## Available Scripts
 
-In the project directory, you can run:
+In the project directory, you can run the following commands:
 
-### `npm start run:dev`
+### `npm start` or `npm run start:dev`
 
-Runs the app in the development mode.\
-The page will reload when you make changes.\
+Runs the app in development mode. The page will automatically reload whenever you make changes.
 
 ### `npm test`
 
-Launches the test runner in the interactive watch mode.\
+Launches the test runner in interactive watch mode.
 
 ### `npm run build:dev`
 
-Builds the app for development to the `build` folder.\
-It correctly bundles React and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Builds the app for development into the `build` folder. This optimizes the app for best performance but keeps the build suitable for development.
 
 ### `npm run build:production`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Builds the app for production into the `build` folder. This optimizes React for production and minifies the files. The resulting build is ready to be deployed.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+---
 
+## Deployment
 
-### Deployment
-Dockerfile included to deploy as a standalone frontend server. 
-Sample deploy commands:
+To deploy this app as a standalone frontend server, you can use Docker.
+
+### Docker Commands:
+
 ```bash
+# Build the Docker image
 docker build -t stickies-app .
+
+# Run the Docker container
 docker run --name stickies-app -p 4001:4001 stickies-app
-```
