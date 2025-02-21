@@ -36,18 +36,32 @@ describe("Api", () => {
   });
 
   it("should successfully login with valid credentials and set the access token", async () => {
-    const mockUserData = { email: "test@example.com", password: "Password123$" };
+    const mockUserData = {
+      email: "test@example.com",
+      password: "Password123$",
+    };
     const mockAccessToken = "mock_access_token";
-    const mockResponse = { data: { accessToken: mockAccessToken } };
+    const mockResponse = {
+      headers: {
+        get: jest.fn().mockImplementation((header) => {
+          if (header === "Authorization") {
+            return mockAccessToken;
+          }
+          return null;
+        }),
+      },
+      status: 200,
+    };
 
-    api.post.mockResolvedValueOnce(mockResponse);
+    jest.spyOn(api, "post").mockResolvedValueOnce(mockResponse);
 
     const result = await login(mockUserData);
 
     expect(api.post).toHaveBeenCalledWith("/users/login", mockUserData, {
       withCredentials: true,
     });
-    expect(setToken).toHaveBeenCalledWith(mockAccessToken);
+    expect(mockResponse.headers.get).toHaveBeenCalledWith("Authorization");
+    expect(setToken).toHaveBeenCalledWith("mock_access_token");
     expect(result).toEqual({
       status: statusCode.SUCCESS,
       message: "Login Successful",
@@ -81,16 +95,27 @@ describe("Api", () => {
       password: "newpassword123",
     };
     const mockAccessToken = "new_user_access_token";
-    const mockResponse = { data: { accessToken: mockAccessToken } };
+    const mockResponse = {
+      headers: {
+        get: jest.fn().mockImplementation((header) => {
+          if (header === "Authorization") {
+            return mockAccessToken;
+          }
+          return null;
+        }),
+      },
+      status: 200,
+    };
 
-    api.post.mockResolvedValueOnce(mockResponse);
+    jest.spyOn(api, "post").mockResolvedValueOnce(mockResponse);
 
     const result = await signUp(mockUserData);
 
     expect(api.post).toHaveBeenCalledWith("/users/signup", mockUserData, {
       withCredentials: true,
     });
-    expect(setToken).toHaveBeenCalledWith(mockAccessToken);
+    expect(mockResponse.headers.get).toHaveBeenCalledWith("Authorization");
+    expect(setToken).toHaveBeenCalledWith("new_user_access_token");
     expect(result).toEqual({
       status: statusCode.SUCCESS,
       message: "User Created",

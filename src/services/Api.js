@@ -18,6 +18,7 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = getToken();
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -30,17 +31,6 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    // Handle cases where config is undefined
-    api.interceptors.request.use(
-      (config) => {
-        const token = getToken();
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => Promise.reject(new Error(error.message))
-    );
     // Check if the request is for the refresh token endpoint
     if (originalRequest.url === "/users/refresh-token") {
       //Deleting tokens as refresh failed.
@@ -62,8 +52,8 @@ api.interceptors.response.use(
           { withCredentials: true }
         );
         if (response.data && response.status !== 401) {
-          const { accessToken } = response.data;
-          setToken(accessToken);
+          const accessToken = response.headers.get("Authorization");
+          setToken(accessToken?.replace("Bearer ", ""));
           // Retry the original request with the new token
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
           return api(originalRequest);
@@ -88,10 +78,10 @@ const login = async (userData) => {
     const response = await api.post("/users/login", userData, {
       withCredentials: true,
     });
-    const accessToken = response.data.accessToken;
-    
+    const accessToken = response.headers.get("Authorization");
+
     if (accessToken) {
-      setToken(accessToken);
+      setToken(accessToken?.replace("Bearer ", ""));
       return { status: statusCode.SUCCESS, message: "Login Successful" };
     }
   } catch (error) {
@@ -107,7 +97,7 @@ const signUp = async (userData) => {
     const response = await api.post("/users/signup", userData, {
       withCredentials: true,
     });
-    const accessToken = response.data.accessToken;
+    const accessToken = response.headers.get("Authorization");
     if (accessToken) {
       setToken(accessToken);
       return { status: statusCode.SUCCESS, message: "User Created" };
@@ -211,5 +201,6 @@ export {
   resetPassword,
   signUp,
   updateNote,
-  updateNoteOrder,
+  updateNoteOrder
 };
+
