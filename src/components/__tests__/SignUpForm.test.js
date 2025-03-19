@@ -1,7 +1,45 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import { checkEmail, signUp } from "../../services/Api";
+import { statusCode } from "../../util/auth";
+import { errorReason } from "../../util/inputValidation";
 import SignUpForm from "../SignUpForm";
 
-// Mock functions for the submit and toggleForm props
+jest.mock("../../util/auth", () => ({
+  showForm: jest.fn(),
+  statusCode: { SUCCESS: "SUCCESS", ERROR: "ERROR" },
+}));
+
+jest.mock("../../services/Api", () => ({
+  checkEmail: jest.fn(),
+  signUp: jest.fn(),
+}));
+
+jest.mock("../OTP", () => (props) => {
+  return (
+    <div data-testid="otp-input">
+      {Array.from({ length: props.length }).map((_, index) => (
+        <input
+          key={index}
+          data-testid={`otp-input-${index}`}
+          value={props.value[index] || ""}
+          onChange={(e) => {
+            const newValue = e.target.value;
+            const otpArray = props.value.split("");
+            otpArray[index] = newValue;
+            props.onChange(otpArray.join(""));
+          }}
+        />
+      ))}
+    </div>
+  );
+});
+
 const mockSubmit = jest.fn();
 const mockToggleForm = jest.fn();
 const mockError = jest.fn();
@@ -9,7 +47,6 @@ const mockInfo = jest.fn();
 
 describe("SignUpForm Component", () => {
   beforeEach(() => {
-    // Render the SignUpForm component before each test
     render(
       <SignUpForm
         submit={mockSubmit}
@@ -20,78 +57,212 @@ describe("SignUpForm Component", () => {
     );
   });
 
-  it("renders correctly", () => {
-    // Check if all elements are rendered
+  it("renders SignUpForm component", () => {
     expect(screen.getByText("My Stickies Sign Up")).toBeInTheDocument();
-    expect(screen.getByLabelText(/Name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/E-mail/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Password/i)).toBeInTheDocument();
-    expect(screen.getByText("Back to Login")).toBeInTheDocument();
-    expect(screen.getByText("Sign Up")).toBeInTheDocument();
+    expect(screen.getByLabelText("E-mail")).toBeInTheDocument();
   });
 
-  it("updates input fields when typed into", () => {
-    // Select name, email, and password inputs
-    const nameInput = screen.getByLabelText(/Name/i);
-    const emailInput = screen.getByLabelText(/E-mail/i);
-    const passwordInput = screen.getByLabelText(/Password/i);
-    const mockSubmitData = {
-      name: "John Doe",
-      email: "john@example.com",
-      password: "Password123$",
-    };
-    // Simulate user input
-    fireEvent.change(nameInput, { target: { value: mockSubmitData.name } });
-    fireEvent.change(emailInput, { target: { value: mockSubmitData.email } });
-    fireEvent.change(passwordInput, {
-      target: { value: mockSubmitData.password },
-    });
-
-    // Check if the values were updated correctly
-    expect(nameInput.value).toBe("John Doe");
-    expect(emailInput.value).toBe("john@example.com");
-    expect(passwordInput.value).toBe("Password123$");
+  it("handles email input change", () => {
+    const emailInput = screen.getByTestId("signup-email");
+    fireEvent.change(emailInput, { target: { value: "user@example.com" } });
+    expect(emailInput).toHaveValue("user@example.com");
   });
 
-  it("calls the submit function with form data on form submission", () => {
-    // Select inputs and submit button
-    const nameInput = screen.getByTestId("sign-up-name");
-    const emailInput = screen.getByTestId("sign-up-email");
-    const passwordInput = screen.getByTestId("sign-up-password");
-    const signUpButton = screen.getByTestId("sign-up-user-button");
-    const mockSubmitData = {
-      name: "John Doe",
-      email: "john@example.com",
-      password: "Password123$",
-    };
-    // Simulate user input
-    fireEvent.change(nameInput, { target: { value: mockSubmitData.name } });
-    fireEvent.change(emailInput, { target: { value: mockSubmitData.email } });
-    fireEvent.change(passwordInput, {
-      target: { value: mockSubmitData.password },
+  it("sends OTP when email is valid", async () => {
+    checkEmail.mockResolvedValue({ status: statusCode.SUCCESS });
+
+    const emailInput = screen.getByTestId("signup-email");
+    const sendOtpButton = screen.getByTestId("signup-send-otp-button");
+
+    fireEvent.change(emailInput, { target: { value: "user@example.com" } });
+
+    await act(async () => {
+      fireEvent.click(sendOtpButton);
     });
 
-    // Simulate form submission
+    expect(checkEmail).toHaveBeenCalledWith("user@example.com");
+    expect(mockInfo).toHaveBeenCalledWith(null);
+    await waitFor(() =>
+      expect(mockInfo).toHaveBeenCalledWith(
+        "To validate your email, a 4 digit One Time Password has been sent to your email address."
+      )
+    );
+  });
+
+  it("toggle Send Code button when email is invalid or not", async () => {
+    checkEmail.mockResolvedValue({ status: statusCode.SUCCESS });
+    const validEmail = "valid@example.com";
+    const invalidEmail = "invalid-email";
+
+    const emailInput = screen.getByTestId("signup-email");
+    const sendOtpButton = screen.getByTestId("signup-send-otp-button");
+
+    fireEvent.change(emailInput, { target: { value: invalidEmail } });
+    expect(sendOtpButton.textContent).toBe("Send Code");
+    //button should stay disabled
+    expect(sendOtpButton).toBeDisabled();
+    //validate once again with a valid email
+    fireEvent.change(emailInput, { target: { value: validEmail } });
+    expect(sendOtpButton).not.toBeDisabled();
+    await act(async () => {
+      fireEvent.click(sendOtpButton);
+    });
+    expect(mockInfo).toHaveBeenCalledWith(null);
+    await waitFor(() =>
+      expect(mockInfo).toHaveBeenCalledWith(
+        "To validate your email, a 4 digit One Time Password has been sent to your email address."
+      )
+    );
+  });
+
+  it("complete signup when when OTP, name and new password are valid", async () => {
+    //mock the successful checkEmail and signUp calls
+    checkEmail.mockResolvedValue({ status: statusCode.SUCCESS });
+    signUp.mockResolvedValue({ status: statusCode.SUCCESS });
+
+    const mockFormData = {
+      name: "Test User",
+      email: "test@example.com",
+      password: "NewPassword123$",
+      otp: "1234",
+    };
+
+    const emailInput = screen.getByTestId("signup-email");
+    const sendOtpButton = screen.getByTestId("signup-send-otp-button");
+
+    fireEvent.change(emailInput, { target: { value: mockFormData.email } });
+    await act(async () => {
+      fireEvent.click(sendOtpButton);
+    });
+    await waitFor(() => screen.getByTestId("otp-input-0"));
+
+    //info & errorMessage is set to null at the start of sendOTP function to clear any previous messages
+    expect(mockInfo).toHaveBeenCalledWith(null);
+    expect(mockError).toHaveBeenCalledWith(null);
+
+    const signupButton = screen.getByTestId("signup-submit-otp-button");
+    //the sign up button is disabled until all 4 digits are entered
+    expect(signupButton).toBeDisabled();
+
+    //the OTP inputs will appear on screen and sign up button will be displayed but disabled
+    const otpInputs = screen.getAllByTestId(/^otp-input-/);
+    //enter the valid OTP
+    otpInputs.forEach((input, index) =>
+      fireEvent.change(input, { target: { value: mockFormData.otp[index] } })
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId("otp-value")).toHaveTextContent(
+        "Entered value: " + mockFormData.otp
+      )
+    );
+
+    // once checkEmail is called, the timer starts
+    expect(screen.getByTestId("timer-value")).toHaveTextContent(
+      "Time remaining: 10:00"
+    );
+
+    //enter name and password
+    const nameInput = screen.getByTestId("signup-name");
+    const passwordInput = screen.getByTestId("signup-password");
+    fireEvent.change(nameInput, {
+      target: { value: mockFormData.name },
+    });
+    expect(nameInput).toHaveValue(mockFormData.name);
+    fireEvent.change(passwordInput, {
+      target: { value: mockFormData.password },
+    });
+    expect(passwordInput).toHaveValue(mockFormData.password);
+
+    //the sign up button is no longer disabled once all 4 digits and password are entered
+    expect(signupButton).not.toBeDisabled();
+    // mock the successful sign up
+    await act(async () => {
+      fireEvent.click(signupButton);
+    });
+    // Verify all API calls were made with correct data
+    expect(checkEmail).toHaveBeenCalledWith(mockFormData.email);
+    expect(signUp).toHaveBeenCalledWith(
+      mockFormData.name,
+      mockFormData.email,
+      mockFormData.password,
+      mockFormData.otp
+    );
+  });
+
+  it("shows error when OTP is invalid", async () => {
+    checkEmail.mockResolvedValue({ status: statusCode.SUCCESS });
+    signUp.mockResolvedValue({ status: statusCode.ERROR }); //mock the failed OTP check
+    const mockFormData = {
+      name: "Test User",
+      email: "test@example.com",
+      password: "NewPassword123$",
+      otp: "1234",
+    };
+    const invalidOTP = "0000";
+
+    const emailInput = screen.getByTestId("signup-email");
+    const sendOtpButton = screen.getByTestId("signup-send-otp-button");
+
+    fireEvent.change(emailInput, { target: { value: mockFormData.email } });
+    fireEvent.click(sendOtpButton);
+    await waitFor(() => screen.getByTestId("otp-input-0"));
+
+    //info & errorMessage is set to null at the start of sendOTP function to clear any previous messages
+    expect(mockInfo).toHaveBeenCalledWith(null);
+    expect(mockError).toHaveBeenCalledWith(null);
+
+    //the OTP inputs will appear on screen and sign up button will be displayed but disabled
+    const otpInputs = screen.getAllByTestId(/^otp-input-/);
+    const signUpButton = screen.getByTestId("signup-submit-otp-button");
+    //the sign up button is disabled until all 4 digits and password
+    expect(signUpButton).toBeDisabled();
+
+    // once checkEmail is called, the timer starts
+    expect(screen.getByTestId("timer-value")).toHaveTextContent(
+      "Time remaining: 10:00"
+    );
+
+    //enter the invalid OTP
+    otpInputs.forEach((input, index) =>
+      fireEvent.change(input, { target: { value: invalidOTP[index] } })
+    );
+
+    //the sign up button is no longer disabled once all 4 digits are entered
+    expect(signUpButton).not.toBeDisabled();
+
+    await waitFor(() =>
+      expect(screen.getByTestId("otp-value")).toHaveTextContent(
+        "Entered value: " + invalidOTP
+      )
+    );
+
+    //enter name and password
+    const nameInput = screen.getByTestId("signup-name");
+    const passwordInput = screen.getByTestId("signup-password");
+    fireEvent.change(nameInput, {
+      target: { value: mockFormData.name },
+    });
+    expect(nameInput).toHaveValue(mockFormData.name);
+    fireEvent.change(passwordInput, {
+      target: { value: mockFormData.password },
+    });
+    expect(passwordInput).toHaveValue(mockFormData.password);
+
+    //click the sign up button
     fireEvent.click(signUpButton);
-    expect(signUpButton.textContent).toBe("Sign Up");
 
-    // Check if the submit function was called with the form data
-    expect(mockSubmit).toHaveBeenCalledWith(mockSubmitData);
-  });
+    expect(signUp).toHaveBeenCalledWith(
+      mockFormData.name,
+      mockFormData.email,
+      mockFormData.password,
+      invalidOTP
+    );
 
-  it("calls toggleForm function when 'Login' button is clicked", () => {
-    // Select the "Login" button
-    const loginButton = screen.getByTestId("login-user-button");
-    expect(loginButton.textContent).toBe("Back to Login");
-    // Simulate button click
-    fireEvent.click(loginButton);
-
-    // Check if the toggleForm function was called with the correct argument
-    expect(mockToggleForm).toHaveBeenCalledWith({
-      email: "",
-      name: "",
-      password: "",
-      toggleForm: 0,
-    });
+    //errorMessage is set to null at the start of handleSignup function to clear any previous error messages
+    expect(mockError).toHaveBeenCalledWith(null);
+    await waitFor(() =>
+      expect(mockError).toHaveBeenCalledWith(errorReason.OTP_INVALID)
+    );
   });
 });
