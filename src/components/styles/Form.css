@@ -31,6 +31,13 @@
   text-align: center;
   margin-bottom: 10px;
 }
+@media screen and (max-width: 600px) {
+  .auth-title {
+    font-size: 20px;
+    margin: 1px;
+    width: 100%;
+  }
+}
 
 .form-group {
   display: grid;
@@ -57,6 +64,41 @@ input[type="password"] {
   gap: 10px;
   margin-top: 20px;
   flex-wrap: wrap;
+}
+
+@media screen and (max-width: 600px) {
+  .button-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+
+  .submit-btn,
+  .alter-btn {
+    width: 100%;
+    margin: 0;
+  }
+
+  /* Specific order for buttons */
+  .alter-btn {
+    order: 3;
+  }
+
+  [data-testid="signup-submit-otp-button"] {
+    order: 1; /* Sign Up */
+  }
+
+  [data-testid="signup-send-otp-button"] {
+    order: 2; /* Resend Code */
+  }
+
+  [data-testid="reset-submit-otp-button"] {
+    order: 1; /* Sign Up */
+  }
+
+  [data-testid="reset-send-otp-button"] {
+    order: 2; /* Resend Code */
+  }
 }
 
 .submit-btn {
@@ -92,7 +134,7 @@ input[type="password"] {
   width: 160px;
 }
 
-.alter-btn .alter-btn-center{
+.alter-btn .alter-btn-center {
   outline: none;
   border: none;
 }

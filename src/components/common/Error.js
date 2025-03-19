@@ -1,17 +1,16 @@
 import PropTypes from "prop-types";
+import { forwardRef } from "react";
 import "./styles/Error.css";
+
+const Error = forwardRef(({ message }, ref) => (
+  <output ref={ref} className="error-panel">
+    {message}
+  </output>
+));
 
 // Prop Types validation
 Error.propTypes = {
   message: PropTypes.string.isRequired,
 };
-
-function Error(props) {
-  return (
-    <div className="error-panel">
-      <p>{props.message}</p>
-    </div>
-  );
-}
 
 export default Error;

@@ -1,6 +1,7 @@
 import { Box } from "@mui/material";
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
+import config from "../config/config.js";
 import { forgotPassword, resetPassword } from "../services/Api";
 import { authFormType, showForm, statusCode } from "../util/auth";
 import {
@@ -65,16 +66,25 @@ function ResetForm({ submit, toggleForm, errorMessage, infoMessage }) {
       errorMessage(errorReason.EMAIL_INVALID);
       return;
     }
+    if (otpSendCount > config.otpRetryAttempts) {
+      errorMessage("Password Reset unsuccessful. Please try again later.");
+      return;
+    }
     //call api to send OTP if email is valid
     const result = await forgotPassword(formData.email);
-    infoMessage(
-      "If your email is assigned to an account, a 4 digit One Time Password has been " +
-        (otpSendCount > 0 ? "re" : "") +
-        "sent to your email address."
-    );
-    if (result.status === statusCode.SUCCESS) {
-      setOtpSendCount(otpSendCount + 1);
+    if (result.status === statusCode.ERROR) {
+      infoMessage(null);
+      errorMessage(result.message);
+      setOtpSendCount(0);
+      return;
+    } else {
+      infoMessage(
+        "If your email is assigned to an account, a 4 digit One Time Password has been " +
+          (otpSendCount > 0 ? "re" : "") +
+          "sent to your email address."
+      );
     }
+    setOtpSendCount(otpSendCount + 1);
   };
 
   const handleResetPassword = async () => {
@@ -91,17 +101,30 @@ function ResetForm({ submit, toggleForm, errorMessage, infoMessage }) {
     }
     if (!otp || otp.length !== 4) {
       errorMessage(errorReason.OTP_INVALID);
+      return;
     }
 
     //send API call to reset password using otp, email, and new password
-    const result = await resetPassword(formData.email, formData.password, otp);
-
-    if (result.status === statusCode.SUCCESS) submit(formData);
-    else errorMessage(errorReason.OTP_INVALID);
+    let result = null;
+    if (otpSendCount <= config.otpRetryAttempts) {
+      result = await resetPassword(formData.email, formData.password, otp);
+      if (result.status === statusCode.SUCCESS) submit(formData);
+      else errorMessage(errorReason.OTP_INVALID);
+    } else {
+      errorMessage("Password Reset unsuccessful. Please try again later.");
+    }
+    setOtpSendCount(otpSendCount + 1);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // If OTP is being shown and is complete, trigger signup
+    if (otpSendCount > 0 && otp.length === config.otpLength) {
+      handleResetPassword();
+    } else {
+      // Otherwise trigger OTP send
+      sendOTP();
+    }
   };
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
@@ -113,7 +136,11 @@ function ResetForm({ submit, toggleForm, errorMessage, infoMessage }) {
     <div className="wrapper">
       <div className="auth-container">
         <form onSubmit={handleSubmit} className="auth-form">
-          <h2 className="auth-title">My Stickies Password Reset</h2>
+          <h2 className="auth-title">
+            My Stickies
+            <br />
+            Password Reset
+          </h2>
           <div className="form-group">
             <p>Reset your password using your email.</p>
           </div>
@@ -127,6 +154,7 @@ function ResetForm({ submit, toggleForm, errorMessage, infoMessage }) {
               required
               value={formData.email}
               onChange={handleChange}
+              autoComplete="username"
             />
           </div>
           {otpSendCount > 0 && (
@@ -159,6 +187,7 @@ function ResetForm({ submit, toggleForm, errorMessage, infoMessage }) {
                 required
                 value={formData.password}
                 onChange={handleChange}
+                autoComplete="new-password"
               />
             </div>
           )}
@@ -174,10 +203,14 @@ function ResetForm({ submit, toggleForm, errorMessage, infoMessage }) {
             </button>
             <button
               data-testid="reset-send-otp-button"
-              type="submit"
+              type="button"
               className="submit-btn"
               onClick={sendOTP}
-              disabled={!validEmail(formData.email) || timer <= 0}
+              disabled={
+                !validEmail(formData.email) ||
+                timer <= 0 ||
+                otpSendCount > config.otpRetryAttempts
+              }
             >
               {otpSendCount > 0 ? "Resend Code" : "Send Code"}
             </button>
@@ -186,7 +219,11 @@ function ResetForm({ submit, toggleForm, errorMessage, infoMessage }) {
                 data-testid="reset-submit-otp-button"
                 type="submit"
                 className="submit-btn"
-                disabled={otp.length !== 4 || timer <= 0}
+                disabled={
+                  otp.length !== 4 ||
+                  timer <= 0 ||
+                  otpSendCount > config.otpRetryAttempts
+                }
                 onClick={handleResetPassword}
               >
                 Reset Password

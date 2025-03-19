@@ -1,108 +1,120 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import { UserProvider, useUserProfile } from "../../context/UserContext";
-import { login, signUp } from "../../services/Api";
-import Auth from "../Auth";
+import config from "../../config/config";
+import { useUserProfile } from "../../context/UserContext";
+import { checkEmail, login, signUp } from "../../services/Api";
 import { errorReason } from "../../util/inputValidation";
+import Auth from "../Auth";
 
-// Mock the login and signUp services
+// Mock setUser function before other mocks
+const mockSetUser = jest.fn();
+const mockNavigate = jest.fn();
+
+// Mock the api calls
 jest.mock("../../services/Api", () => ({
   login: jest.fn(),
   signUp: jest.fn(),
+  checkEmail: jest.fn(),
 }));
 
-// Mock useNavigate from react-router-dom
+// Mock react-router-dom
 jest.mock("react-router-dom", () => ({
   ...jest.requireActual("react-router-dom"),
-  useNavigate: jest.fn(),
+  useNavigate: () => mockNavigate,
+  useLocation: () => ({ pathname: "/" }),
 }));
 
-// Mock the UserContext
+//jsdom (used in Jest tests) doesn't support scrollIntoView
+window.HTMLElement.prototype.scrollIntoView = jest.fn();
+
+// Mock UserContext
 jest.mock("../../context/UserContext", () => ({
-  UserProvider: ({ children }) => <div>{children}</div>, // Simple mock provider
-  useUserProfile: jest.fn(() => ({
-    user: { email: "test@example.com" },
-    setUser: mockSetUser, // Mock the setUser function
-  })),
+  UserProvider: ({ children }) => children,
+  useUserProfile: jest.fn(),
 }));
+
 describe("Auth Component", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Mock useNavigate in the beforeEach so it's available before rendering the component
-    const navigate = jest.fn();
-    useNavigate.mockReturnValue(navigate);
-
     useUserProfile.mockReturnValue({
       user: { email: "mocktest@example.com" },
-      setUser: jest.fn(),
+      setUser: mockSetUser,
     });
-
-    render(
-      <UserProvider>
-        <Auth />
-      </UserProvider>
-    );
+    render(<Auth />);
   });
 
+  // Your existing test cases updated to use imported mocks
   it("renders the LoginForm by default", () => {
     expect(screen.getByText(/My Stickies Login/i)).toBeInTheDocument();
   });
 
   it("renders the SignUpForm when toggled", () => {
-    const signUpFormButton = screen.getByTestId("sign-up-user-form-button");
+    const signUpFormButton = screen.getByTestId("signup-user-form-button");
     fireEvent.click(signUpFormButton);
     expect(screen.getByText(/My Stickies Sign Up/i)).toBeInTheDocument();
   });
 
-  it("calls login service on form submit and shows error if login fails", async () => {
-    login.mockResolvedValueOnce({
-      status: "ERROR",
-      message: errorReason.EMAIL_INVALID,
+  it("navigates to /notes on successful Sign Up", async () => {
+    
+    checkEmail.mockResolvedValueOnce({
+      status: "SUCCESS",
+      message: "OTP sent successfully",
     });
 
-    const submitButton = screen.getByTestId("login-user-button");
-    fireEvent.click(submitButton);
-
-    await waitFor(() =>
-      expect(
-        screen.getByText(errorReason.EMAIL_INVALID)
-      ).toBeInTheDocument()
-    );
-  });
-
-  it("navigates to /notes on successful Sign Up", async () => {
     signUp.mockResolvedValueOnce({
       status: "SUCCESS",
       message: "User Created",
     });
 
-    // Open Sign Up Form
-    const signUpFormButton = screen.getByTestId("sign-up-user-form-button");
-    fireEvent.click(signUpFormButton);
-
-    // Select inputs and submit button
-    const nameInput = screen.getByTestId("sign-up-name");
-    const emailInput = screen.getByTestId("sign-up-email");
-    const passwordInput = screen.getByTestId("sign-up-password");
-    const signUpButton = screen.getByTestId("sign-up-user-button");
-    const mockSubmitData = {
-      name: "John Doe",
-      email: "john@example.com",
-      password: "Password123$",
+    const mockFormData = {
+      name: "Test User",
+      email: "test@example.com",
+      password: "NewPassword123$",
+      otp: "1234",
     };
 
-    // Simulate user input
-    fireEvent.change(nameInput, { target: { value: mockSubmitData.name } });
-    fireEvent.change(emailInput, { target: { value: mockSubmitData.email } });
-    fireEvent.change(passwordInput, {
-      target: { value: mockSubmitData.password },
+    // Open Sign Up Form
+    const signUpFormButton = screen.getByTestId("signup-user-form-button");
+    fireEvent.click(signUpFormButton);
+
+    // Step 1: Enter and submit email for OTP
+    await waitFor(() => screen.getByTestId("signup-email"));
+    const emailInput = screen.getByTestId("signup-email");
+
+    fireEvent.change(emailInput, { target: { value: mockFormData.email } });
+
+    const sendOtpButton = screen.getByTestId("signup-send-otp-button");
+    fireEvent.click(sendOtpButton);
+
+    // Wait for OTP form to appear and enter OTP
+    await waitFor(() => screen.getByTestId("otp-input-0"));
+
+    // Step 2: Enter OTP, name, and password
+    // Find each OTP input by specific test-id and enter value
+    for (let i = 0; i < config.otpLength; i++) {
+      const input = screen.getByTestId(`otp-input-${i}`).querySelector("input");
+      fireEvent.change(input, { target: { value: mockFormData.otp[i] } });
+    }
+
+    //enter name and password
+    const nameInput = screen.getByTestId("signup-name");
+    const passwordInput = screen.getByTestId("signup-password");
+    fireEvent.change(nameInput, {
+      target: { value: mockFormData.name },
     });
+    expect(nameInput).toHaveValue(mockFormData.name);
+    fireEvent.change(passwordInput, {
+      target: { value: mockFormData.password },
+    });
+    expect(passwordInput).toHaveValue(mockFormData.password);
 
-    fireEvent.click(signUpButton);
+    // mock the successful sign up
+    const signupButton = screen.getByTestId("signup-submit-otp-button");
+    fireEvent.click(signupButton);
 
-    // Ensure useNavigate is mocked properly inside beforeEach
+    // Verify navigation
     const navigate = useNavigate();
-
     await waitFor(() => {
       expect(navigate).toHaveBeenCalledWith(
         "/notes",
@@ -116,6 +128,7 @@ describe("Auth Component", () => {
       status: "ERROR",
       message: "Unable to login",
     });
+
     const emailInput = screen.getByTestId("login-email");
     const passwordInput = screen.getByTestId("login-password");
     const loginButton = screen.getByTestId("login-user-button");
@@ -127,9 +140,7 @@ describe("Auth Component", () => {
     fireEvent.click(loginButton);
 
     await waitFor(() =>
-      expect(
-        screen.getByText(errorReason.EMAIL_INVALID)
-      ).toBeInTheDocument()
+      expect(screen.getByText(errorReason.EMAIL_INVALID)).toBeInTheDocument()
     );
   });
   it("displays the error message if login password is invalid", async () => {
@@ -137,6 +148,7 @@ describe("Auth Component", () => {
       status: "ERROR",
       message: "Unable to login",
     });
+
     const emailInput = screen.getByTestId("login-email");
     const passwordInput = screen.getByTestId("login-password");
     const loginButton = screen.getByTestId("login-user-button");
@@ -147,29 +159,7 @@ describe("Auth Component", () => {
     fireEvent.click(loginButton);
 
     await waitFor(() =>
-      expect(
-        screen.getByText(errorReason.PASSWORD_INVALID)
-      ).toBeInTheDocument()
-    );
-  });
-
-  it("displays the info message after successful login/signup", async () => {
-    login.mockResolvedValueOnce({
-      status: "SUCCESS",
-      message: "Login Successful",
-    });
-    const emailInput = screen.getByTestId("login-email");
-    const passwordInput = screen.getByTestId("login-password");
-    const loginButton = screen.getByTestId("login-user-button");
-
-    // Simulate user input
-    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
-    fireEvent.change(passwordInput, { target: { value: "Password123$" } });
-
-    fireEvent.click(loginButton);
-
-    await waitFor(() =>
-      expect(screen.getByText(/Login Successful/i)).toBeInTheDocument()
+      expect(screen.getByText(errorReason.PASSWORD_INVALID)).toBeInTheDocument()
     );
   });
 });

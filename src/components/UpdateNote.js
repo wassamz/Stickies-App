@@ -4,7 +4,9 @@ import Fab from "@mui/material/Fab";
 import Zoom from "@mui/material/Zoom";
 import PropTypes from "prop-types";
 import { useEffect, useRef, useState } from "react";
-import { MAX_CONTENT_LENGTH, MAX_TITLE_LENGTH } from "../util/note";
+
+import config from "../config/config";
+
 
 // Prop Types validation
 UpdateNote.propTypes = {
@@ -57,7 +59,7 @@ function UpdateNote(props) {
             placeholder="Title"
             onChange={handleChange}
             value={updateNote?.title}
-            maxLength={MAX_TITLE_LENGTH}
+            maxLength={config.titleMaxLength}
           />
         </Zoom>
 
@@ -68,7 +70,7 @@ function UpdateNote(props) {
           rows={rows}
           onChange={handleChange}
           value={updateNote?.content}
-          maxLength={MAX_CONTENT_LENGTH}
+          maxLength={config.noteContentMaxLength}
           ref={contentRef}
         />
         <Zoom

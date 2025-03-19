@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Error from "../components/common/Error";
 import Footer from "../components/common/Footer";
@@ -8,8 +8,8 @@ import LoginForm from "../components/LoginForm";
 import ResetForm from "../components/ResetForm";
 import SignUpForm from "../components/SignUpForm";
 import { useUserProfile } from "../context/UserContext";
-import { login, signUp } from "../services/Api";
-import { authFormType, statusCode } from "../util/auth";
+import { authFormType } from "../util/auth";
+import "./styles/Auth.css";
 
 function Auth() {
   let navigate = useNavigate();
@@ -17,6 +17,24 @@ function Auth() {
   const [activeForm, setActiveForm] = useState(authFormType.LOGIN); //default to Login Form
   const [error, setError] = useState(null);
   const [info, setInfo] = useState(null);
+  const errorRef = useRef(null);
+  const infoRef = useRef(null);
+
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.focus();
+      errorRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'center'
+      });
+    } else if (info && infoRef.current) {
+      infoRef.current.focus();
+      infoRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }
+  }, [error, info]);
 
   // Toggle between showing Login Form, Sign Up Form, and Reset Form
   function handleToggle(formData) {
@@ -28,41 +46,63 @@ function Auth() {
   }
 
   async function handleSubmit(data) {
-    let result;
-    if (activeForm === authFormType.SIGNUP) {
-      result = await signUp(data);
-    } else if (activeForm === authFormType.RESET) {
-      setActiveForm(authFormType.LOGIN);
-      setInfo(
-        "Password Reset Successful. Please Login with your new password."
-      );
-      setError(null);
-      return;
-    } else {
-      result = await login(data);
-    }
-
-    if (result.status !== statusCode.SUCCESS) {
-      setError(result.message);
-      setInfo(null);
-    } else {
-      setError(null); // Clear error on successful login/signup/reset
-      setInfo(result.message);
-      data.password = ""; // Clear the password
-      setUser(data); // Save the user data in context
-
-      navigate("/notes", {
-        replace: true,
-      });
+    switch (activeForm) {
+      case authFormType.LOGIN:
+        // show Notes page after successful login
+        goToNotes(data);
+        break;
+      case authFormType.SIGNUP:
+        // show Notes page after successful SignUp
+        goToNotes(data);
+        break;
+      case authFormType.RESET:
+        //show Login Form after successful password reset
+        setActiveForm(authFormType.LOGIN);
+        setInfo(
+          "Password Reset Successful. Please Login with your new password."
+        );
+        setError(null);
+        break;
+      default:
+        break;
     }
   }
 
+  function goToNotes(data) {
+    // Clear messages on successful login/signup/reset
+    setError(null);
+    setInfo(null);
+    data.password = ""; // Clear the password
+    setUser(data); // Save the user data in context
+    navigate("/notes", {
+      replace: true,
+    });
+  }
+
   return (
-    <div>
+    <div className="auth-page-container">
       <Header onSearch={() => {}} userData={{}} />
 
-      <div>
-        <div>
+      <div className="auth-content">
+        <div className="auth-messages">
+          {error && (
+            <Error
+              ref={errorRef}
+              message={error}
+              tabIndex="-1"
+              aria-live="assertive"
+            />
+          )}
+          {info && (
+            <Info
+              ref={infoRef}
+              message={info}
+              tabIndex="-1"
+              aria-live="polite"
+            />
+          )}
+        </div>
+        <div className="auth-forms-container">
           {activeForm === authFormType.SIGNUP && (
             <SignUpForm
               submit={handleSubmit}
@@ -88,9 +128,6 @@ function Auth() {
             />
           )}
         </div>
-
-        {error && <Error message={error} />}
-        {info && <Info message={info} />}
       </div>
       <Footer />
     </div>

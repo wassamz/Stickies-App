@@ -39,7 +39,7 @@ function Search(props) {
   };
 
   return (
-    <div>
+    <div className="search">
       <form data-testid="search-form" onSubmit={performSearch}>
         <input
           type="text"

@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
 import { useState } from "react";
-import { authFormType, showForm } from "../util/auth";
+import { login } from "../services/Api";
+import { authFormType, showForm, statusCode } from "../util/auth";
 import {
   errorReason,
   validEmail,
@@ -12,9 +13,10 @@ LoginForm.propTypes = {
   submit: PropTypes.func.isRequired,
   toggleForm: PropTypes.func.isRequired,
   errorMessage: PropTypes.func.isRequired,
+  infoMessage: PropTypes.func.isRequired,
 };
 
-function LoginForm({ submit, toggleForm, errorMessage }) {
+function LoginForm({ submit, toggleForm, errorMessage, infoMessage }) {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -29,7 +31,7 @@ function LoginForm({ submit, toggleForm, errorMessage }) {
 
   const handleShowForm = showForm(setFormData, toggleForm);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validEmail(formData.email)) {
       errorMessage(errorReason.EMAIL_INVALID);
@@ -39,7 +41,17 @@ function LoginForm({ submit, toggleForm, errorMessage }) {
       errorMessage(errorReason.PASSWORD_INVALID);
       return;
     }
-    submit(formData);
+
+    const result = await login(formData);
+
+    if (result.status === statusCode.SUCCESS) {
+      infoMessage(null);
+      errorMessage(null);
+      submit(formData);
+    } else {
+      infoMessage(null);
+      errorMessage(errorReason.LOGIN_FAILED);
+    }
   };
 
   return (
@@ -57,6 +69,7 @@ function LoginForm({ submit, toggleForm, errorMessage }) {
               required
               value={formData.email}
               onChange={handleChange}
+              autoComplete="username"
             />
           </div>
 
@@ -70,12 +83,13 @@ function LoginForm({ submit, toggleForm, errorMessage }) {
               required
               value={formData.password}
               onChange={handleChange}
+              autoComplete="current-password"
             />
           </div>
 
           <div className="button-container">
             <button
-              data-testid="sign-up-user-form-button"
+              data-testid="signup-user-form-button"
               type="button"
               className="alter-btn"
               onClick={() => handleShowForm(authFormType.SIGNUP)}
