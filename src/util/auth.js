@@ -8,7 +8,7 @@ const authFormType = {
   RESET: 2,
 };
 
-const checkAuthLoader = function () {
+const checkAuthLoader = () => {
   const token = getToken();
   if (!token) {
     throw new Response("Unauthorized", { status: 401 });
@@ -17,16 +17,15 @@ const checkAuthLoader = function () {
   return null;
 };
 
-const getToken = function () {
+const getToken = () => {
   return localStorage.getItem("token");
 };
-const setToken = function (token) {
+const setToken = (token) => {
   localStorage.setItem("token", token);
 };
 
-const clearTokens = function () {
+const clearTokens = async () => {
   localStorage.removeItem("token");
-  localStorage.removeItem("refreshToken");
 };
 
 const reject = (error, originalRequest, status, redirect = true) => {
