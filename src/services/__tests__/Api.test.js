@@ -91,8 +91,10 @@ describe("Api", () => {
 
   it("should successfully sign up a new user and set the access token", async () => {
     const mockUserData = {
+      name: "New User",
       email: "newuser@example.com",
       password: "newpassword123",
+      otp: "1111",
     };
     const mockAccessToken = "new_user_access_token";
     const mockResponse = {
@@ -109,11 +111,23 @@ describe("Api", () => {
 
     jest.spyOn(api, "post").mockResolvedValueOnce(mockResponse);
 
-    const result = await signUp(mockUserData);
+    const result = await signUp(
+      mockUserData.name,
+      mockUserData.email,
+      mockUserData.password,
+      mockUserData.otp
+    );
 
-    expect(api.post).toHaveBeenCalledWith("/users/signup", mockUserData, {
-      withCredentials: true,
-    });
+    expect(api.post).toHaveBeenCalledWith(
+      "/users/signup",
+      {
+        name: mockUserData.name,
+        email: mockUserData.email,
+        password: mockUserData.password,
+        otp: mockUserData.otp,
+      },
+      { withCredentials: true }
+    );
     expect(mockResponse.headers.get).toHaveBeenCalledWith("Authorization");
     expect(setToken).toHaveBeenCalledWith("new_user_access_token");
     expect(result).toEqual({
@@ -124,14 +138,21 @@ describe("Api", () => {
 
   it("should handle sign up failure and return an error message", async () => {
     const mockUserData = {
+      name: "New User",
       email: "newuser@example.com",
-      password: "password123",
+      password: "newpassword123",
+      otp: "1111",
     };
     const mockError = new Error("Sign up failed");
 
     api.post.mockRejectedValueOnce(mockError);
 
-    const result = await signUp(mockUserData);
+    const result = await signUp(
+      mockUserData.name,
+      mockUserData.email,
+      mockUserData.password,
+      mockUserData.otp
+    );
 
     expect(api.post).toHaveBeenCalledWith("/users/signup", mockUserData, {
       withCredentials: true,
@@ -139,7 +160,7 @@ describe("Api", () => {
     expect(setToken).not.toHaveBeenCalled();
     expect(result).toEqual({
       status: statusCode.ERROR,
-      message: "Unable to create user",
+      message: "Sign Up Unsuccessful",
     });
   });
 

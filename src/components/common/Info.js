@@ -1,17 +1,14 @@
 import PropTypes from "prop-types";
+import { forwardRef } from "react";
 import "./styles/Info.css";
 
-// Prop Types validation
+const Info = forwardRef(({ message }, ref) => (
+  <output ref={ref} className="info-panel">
+    {message}
+  </output>
+));
 Info.propTypes = {
   message: PropTypes.string.isRequired,
 };
-
-function Info(props) {
-  return (
-    <div className="info-panel">
-      <p>{props.message}</p>
-    </div>
-  );
-}
 
 export default Info;

@@ -28,7 +28,7 @@ function ErrorPage() {
       <Header onSearch={() => {}} userData={{}} />
       <div className="error-content">
         <span className="error-title">Ooops!</span>
-        <p>An error has occured. Let's get back to work.</p>
+        <p>An error has occurred. Let's get back to work.</p>
         {getToken() ? (
           <button onClick={() => navigate("/notes")}>Notes</button>
         ) : (

@@ -1,41 +1,51 @@
-import { useNavigate } from "react-router-dom";
-import PropTypes from 'prop-types';
 import NotesIcon from "@mui/icons-material/Notes";
+import PropTypes from "prop-types";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useUserProfile } from "../../context/UserContext";
+import { logout } from "../../services/Api.js";
 import Search from "./Search.js";
-import { getToken, clearTokens } from "../../util/auth.js";
 import "./styles/Header.css";
-import { useUserProfile } from '../../context/UserContext';
 
 // Prop Types validation
 Header.propTypes = {
-  onSearch: PropTypes.func.isRequired
+  onSearch: PropTypes.func.isRequired,
 };
 
 function Header({ onSearch }) {
   let navigate = useNavigate();
-  const {user}  = useUserProfile();
-
+  const location = useLocation();
+  const { user } = useUserProfile();
+  const isNotesPage = location.pathname === "/notes";
   function handleLogout() {
-    clearTokens();
+    logout();
     navigate("/", { replace: true });
   }
 
   return (
     <header>
       <h1>
-        <img src="/img/sticky-notes.png" alt="Sticky Notes" height="100" width="100"></img>Stickies <NotesIcon />
+        <img src="/img/sticky-notes.png" alt="Sticky Notes" />
+        Stickies <NotesIcon />
       </h1>
-      {(String(onSearch) !== "() => {}")  ? <Search onSearch={onSearch}></Search> : <div></div>}
-      {getToken() ? (
-        <div className="button-container">
-          <h2 className="user">{user?.email}</h2>
-          <button data-testid="logout-button" type="submit" className="submit-btn" onClick={handleLogout}>
-            Logout
-          </button>
-        </div>
-      ) : (
-        <div></div>
-      )}
+
+      {isNotesPage ? (
+        <>
+          <div className="search-container">
+            <Search onSearch={onSearch} />
+          </div>
+          <div className="header-button-container">
+            <h2 className="user">{user?.email}</h2>
+            <button
+              data-testid="logout-button"
+              type="submit"
+              className="submit-btn"
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
+          </div>
+        </>
+      ) : null}
     </header>
   );
 }

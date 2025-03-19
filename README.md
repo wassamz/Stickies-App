@@ -6,10 +6,11 @@ A user-friendly sticky note manager built with React, Material UI, and integrate
 
 ### User Features:
 - **User Registration & Login** – Create an account and log in securely.
-- **Password Reset with OTP** – Reset your password using a one-time password (OTP).
+- **One Time Password** – Sign Up & Reset your password using a one-time password (OTP).
 - **Notes CRUD Operations** – Create, Read, Update, and Delete sticky notes (via Axios).
 - **Search Functionality** – Quickly find your notes with a search feature.
 - **Draggable Notes** – Organize your notes by dragging them. The order is saved automatically (using `@dnd-kit`).
+- **Mobile Friendly** – Responsive design to support small screen sizes.
 
 ### Security Features:
 - **JWT Authentication** – Secure access with JSON Web Tokens (JWT) stored in Local Storage for access tokens, and refresh tokens in Cookies.

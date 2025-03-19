@@ -1,4 +1,5 @@
 import axios from "axios";
+import config from "../config/config.js";
 import {
   clearTokens,
   getToken,
@@ -9,7 +10,7 @@ import {
 
 // Create an Axios instance
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL,
+  baseURL: config.baseURL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -20,7 +21,7 @@ api.interceptors.request.use(
     const token = getToken();
 
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.Authorization = token;
     }
     return config;
   },
@@ -53,9 +54,9 @@ api.interceptors.response.use(
         );
         if (response.data && response.status !== 401) {
           const accessToken = response.headers.get("Authorization");
-          setToken(accessToken?.replace("Bearer ", ""));
+          setToken(accessToken); //save the new token
           // Retry the original request with the new token
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          originalRequest.headers.Authorization = accessToken;
           return api(originalRequest);
         }
       } catch (refreshError) {
@@ -75,13 +76,14 @@ const login = async (userData) => {
     throw new Error("Invalid email or password");
   }
   try {
+    clearTokens();
     const response = await api.post("/users/login", userData, {
       withCredentials: true,
     });
     const accessToken = response.headers.get("Authorization");
 
     if (accessToken) {
-      setToken(accessToken?.replace("Bearer ", ""));
+      setToken(accessToken);
       return { status: statusCode.SUCCESS, message: "Login Successful" };
     }
   } catch (error) {
@@ -89,21 +91,69 @@ const login = async (userData) => {
   }
 };
 
-const signUp = async (userData) => {
-  if (!userData?.email || !userData?.password) {
-    throw new Error("Invalid email or password");
+const logout = async () => {
+  clearTokens();
+  try {
+    await api.post(
+      "/users/logout",
+      {},
+      {
+        withCredentials: true,
+      }
+    );
+    return { status: statusCode.SUCCESS, message: "Logout Successful" };
+  } catch (error) {
+    return { status: statusCode.ERROR, message: "Unable to logout" };
+  }
+};
+
+const signUp = async (name, email, password, otp) => {
+  if (!name || !email || !password || !otp) {
+    throw new Error(
+      "Please check your name, email, password, and OTP and try again."
+    );
   }
   try {
-    const response = await api.post("/users/signup", userData, {
-      withCredentials: true,
-    });
+    const response = await api.post(
+      "/users/signup",
+      { name: name, email: email, password: password, otp: otp },
+      {
+        withCredentials: true,
+      }
+    );
     const accessToken = response.headers.get("Authorization");
+
     if (accessToken) {
       setToken(accessToken);
       return { status: statusCode.SUCCESS, message: "User Created" };
-    }
+    } else return { status: statusCode.ERROR, message: response.data.error };
   } catch (error) {
-    return { status: statusCode.ERROR, message: "Unable to create user" };
+    return { status: statusCode.ERROR, message: "Sign Up Unsuccessful" };
+  }
+};
+
+const checkEmail = async (email) => {
+  if (!email) {
+    throw new Error("Please provide an email address");
+  }
+  try {
+    //check if password already exists, otherwise allow the user to continue
+    const response = await api.post("/users/checkEmail", { email: email });
+    if (response.status === 200)
+      return {
+        status: statusCode.SUCCESS,
+        message: "OTP has been sent your email.",
+      };
+    else
+      return {
+        status: statusCode.ERROR,
+        message: "User already exists. Please login or reset your password.",
+      };
+  } catch (error) {
+    return {
+      status: statusCode.ERROR,
+      message: "User already exists. Please login or reset your password.",
+    };
   }
 };
 
@@ -120,7 +170,7 @@ const forgotPassword = async (email) => {
       };
     else throw new Error("Forgot Password unsuccessful");
   } catch (error) {
-    return { status: statusCode.ERROR, message: "Unable to send OTP" };
+    return { status: statusCode.ERROR, message: "Unable to send OTP. Please try again later." };
   }
 };
 
@@ -193,14 +243,15 @@ const removeNote = async (id) => {
 
 export {
   api,
+  checkEmail,
   createNote,
   forgotPassword,
   login,
+  logout,
   notes,
   removeNote,
   resetPassword,
   signUp,
   updateNote,
-  updateNoteOrder
+  updateNoteOrder,
 };
-
