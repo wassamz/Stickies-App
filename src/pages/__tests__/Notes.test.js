@@ -13,7 +13,7 @@ jest.mock("../../services/Api", () => ({
 jest.mock("react-router-dom", () => ({
   ...jest.requireActual("react-router-dom"),
   useNavigate: jest.fn(),
-  useLocation: jest.fn(),
+  useLocation: jest.fn().mockReturnValue({ pathname: "/notes" }), 
 }));
 // Mock the UserContext
 jest.mock("../../context/UserContext", () => ({
@@ -25,9 +25,11 @@ describe("Notes Component", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     const mockNavigate = jest.fn();
-
+    
+    // Update mocks in beforeEach
     require("react-router-dom").useNavigate.mockReturnValue(mockNavigate);
-
+    require("react-router-dom").useLocation.mockReturnValue({ pathname: "/notes" });
+    
     useUserProfile.mockReturnValue({ user: { email: "mocktest@example.com" } });
 
     notes.mockResolvedValue([
