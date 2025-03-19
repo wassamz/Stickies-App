@@ -1,70 +1,80 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import React from "react";
+import * as router from "react-router-dom";
+import { useUserProfile } from "../../../context/UserContext";
 import { getToken } from "../../../util/auth";
 import Header from "../Header";
-import { UserProvider, useUserProfile } from '../../../context/UserContext'; 
 
+// Create mock functions
+const mockNavigate = jest.fn();
+const mockSetUser = jest.fn();
+const mockLocation = { pathname: "/notes" };
+
+// Mock dependencies before component imports
 jest.mock("react-router-dom", () => ({
   ...jest.requireActual("react-router-dom"),
-  useNavigate: jest.fn(),
+  useNavigate: () => mockNavigate,
+  useLocation: jest.fn(),
 }));
-
-// Mock the UserContext
-jest.mock('../../../context/UserContext', () => ({
-  UserProvider: ({ children }) => <div>{children}</div>, // Simple mock provider
-  useUserProfile: jest.fn(),
-}));
-
-
 
 jest.mock("../../../util/auth", () => ({
   getToken: jest.fn(),
   clearTokens: jest.fn(),
 }));
 
+jest.mock("../../../context/UserContext", () => ({
+  UserProvider: ({ children }) => <div>{children}</div>,
+  useUserProfile: jest.fn(),
+}));
+
 describe("Header Component", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    useUserProfile.mockReturnValue({ user: { email: 'mocktest@example.com' } });
+    router.useLocation.mockImplementation(() => mockLocation);
+    useUserProfile.mockReturnValue({
+      user: { email: "mocktest@example.com" },
+      setUser: mockSetUser,
+    });
   });
+
+  const renderHeader = (props) => {
+    return render(<Header {...props} />);
+  };
 
   it("should render the header with the correct title and icon", () => {
     const mockOnSearch = jest.fn();
-    
     getToken.mockReturnValue(true);
 
-    render(<UserProvider><Header onSearch={mockOnSearch} /></UserProvider>);
+    renderHeader({ onSearch: mockOnSearch });
 
     expect(screen.getByText("Stickies")).toBeInTheDocument();
     expect(screen.getByAltText("Sticky Notes")).toBeInTheDocument();
     expect(screen.getByTestId("NotesIcon")).toBeInTheDocument();
   });
 
-  it("should not display the search component", () => {
-    const hideSearchBox = () => {};
-
-    getToken.mockReturnValue(true);
-
-    render(<UserProvider><Header onSearch={hideSearchBox} /></UserProvider>);
+  it("should not display the search component when not on notes page", () => {
+    router.useLocation.mockImplementation(() => ({ pathname: "/" }));
+    renderHeader({ onSearch: () => {} });
     expect(screen.queryByText("Search...")).not.toBeInTheDocument();
   });
-  it("should display the search component", () => {
-    const showSearchBox = (show) => true;
-    getToken.mockReturnValue(true);
 
-    render(<UserProvider><Header onSearch={showSearchBox}/></UserProvider>);
+  it("should display the search component on notes page", () => {
+    router.useLocation.mockImplementation(() => ({ pathname: "/notes" }));
+    renderHeader({ onSearch: () => {} });
     const searchBox = screen.getByTestId("search-note-content");
-
     expect(searchBox).toBeInTheDocument();
   });
-  it('displays user email when logged in', () => {
-    getToken.mockReturnValue("test")
-    render(
-      <UserProvider>
-        <Header onSearch={() => {}} />
-      </UserProvider>
-    );
 
-    expect(screen.getByText('mocktest@example.com')).toBeInTheDocument();
+  it("displays user email when logged in", () => {
+    getToken.mockReturnValue(true);
+    renderHeader({ onSearch: () => {} });
+    expect(screen.getByText("mocktest@example.com")).toBeInTheDocument();
+  });
+
+  it("handles logout correctly", () => {
+    renderHeader({ onSearch: () => {} });
+    const logoutButton = screen.getByTestId("logout-button");
+    fireEvent.click(logoutButton);
+    expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
   });
 });
