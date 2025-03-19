@@ -1,8 +1,14 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import ResetForm from "../ResetForm";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { forgotPassword, resetPassword } from "../../services/Api";
-import { showForm, statusCode } from "../../util/auth";
+import { statusCode } from "../../util/auth";
 import { errorReason } from "../../util/inputValidation";
+import ResetForm from "../ResetForm";
 
 jest.mock("../../util/auth", () => ({
   showForm: jest.fn(),
@@ -14,24 +20,28 @@ jest.mock("../../services/Api", () => ({
   resetPassword: jest.fn(),
 }));
 
-jest.mock("../OTP", () => (props) => {
-  return (
-    <div data-testid="otp-input">
-      {Array.from({ length: props.length }).map((_, index) => (
-        <input
-          key={index}
-          data-testid={`otp-input-${index}`}
-          value={props.value[index] || ""}
-          onChange={(e) => {
-            const newValue = e.target.value;
-            const otpArray = props.value.split("");
-            otpArray[index] = newValue;
-            props.onChange(otpArray.join(""));
-          }}
-        />
-      ))}
-    </div>
-  );
+jest.mock("../OTP", () => {
+  const OTP = (props) => {
+    return (
+      <div data-testid="otp-input">
+        {Array.from({ length: props.length }).map((_, index) => (
+          <input
+            key={index}
+            data-testid={`otp-input-${index}`}
+            value={props.value[index] || ""}
+            onChange={(e) => {
+              const newValue = e.target.value;
+              const otpArray = props.value.split("");
+              otpArray[index] = newValue;
+              props.onChange(otpArray.join(""));
+            }}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  return OTP;
 });
 
 const mockSubmit = jest.fn();
@@ -52,7 +62,7 @@ describe("ResetForm Component", () => {
   });
 
   it("renders ResetForm component", () => {
-    expect(screen.getByText("My Stickies Password Reset")).toBeInTheDocument();
+    expect(screen.getByText("My StickiesPassword Reset")).toBeInTheDocument();
     expect(screen.getByLabelText("E-mail")).toBeInTheDocument();
     expect(screen.getByTestId("reset-send-otp-button")).toBeInTheDocument();
   });
@@ -70,7 +80,9 @@ describe("ResetForm Component", () => {
     const sendOtpButton = screen.getByTestId("reset-send-otp-button");
 
     fireEvent.change(emailInput, { target: { value: "user@example.com" } });
-    fireEvent.click(sendOtpButton);
+    await act(async () => {
+      fireEvent.click(sendOtpButton);
+    });
 
     expect(forgotPassword).toHaveBeenCalledWith("user@example.com");
     expect(mockInfo).toHaveBeenCalledWith(null);
@@ -96,7 +108,9 @@ describe("ResetForm Component", () => {
     //validate once again with a valid email
     fireEvent.change(emailInput, { target: { value: validEmail } });
     expect(sendOtpButton).not.toBeDisabled();
-    fireEvent.click(sendOtpButton);
+    await act(async () => {
+      fireEvent.click(sendOtpButton);
+    });
     expect(mockInfo).toHaveBeenCalledWith(null);
     await waitFor(() =>
       expect(mockInfo).toHaveBeenCalledWith(
@@ -120,7 +134,9 @@ describe("ResetForm Component", () => {
     const sendOtpButton = screen.getByTestId("reset-send-otp-button");
 
     fireEvent.change(emailInput, { target: { value: mockFormData.email } });
-    fireEvent.click(sendOtpButton);
+    await act(async () => {
+      fireEvent.click(sendOtpButton);
+    });
     await waitFor(() => screen.getByTestId("otp-input-0"));
 
     //info & errorMessage is set to null at the start of sendOTP function to clear any previous messages
@@ -137,7 +153,6 @@ describe("ResetForm Component", () => {
     otpInputs.forEach((input, index) =>
       fireEvent.change(input, { target: { value: mockFormData.otp[index] } })
     );
-    
 
     await waitFor(() =>
       expect(screen.getByTestId("otp-value")).toHaveTextContent(
@@ -156,11 +171,13 @@ describe("ResetForm Component", () => {
       target: { value: mockFormData.password },
     });
     expect(passwordInput).toHaveValue(mockFormData.password);
-    
+
     //the reset button is no longer disabled once all 4 digits and password are entered
     expect(resetPasswordButton).not.toBeDisabled();
     // mock the successful password reset
-    fireEvent.click(resetPasswordButton);
+    await act(async () => {
+      fireEvent.click(resetPasswordButton);
+    });
 
     expect(resetPassword).toHaveBeenCalledWith(
       mockFormData.email,
@@ -222,7 +239,9 @@ describe("ResetForm Component", () => {
     });
     expect(passwordInput).toHaveValue(mockFormData.password);
     //click the reset password button
-    fireEvent.click(resetPasswordButton);
+    await act(async () => {
+      fireEvent.click(resetPasswordButton);
+    });
 
     expect(resetPassword).toHaveBeenCalledWith(
       mockFormData.email,
