@@ -1,4 +1,6 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { login } from "../../services/Api";
+import { statusCode } from "../../util/auth";
 import LoginForm from "../LoginForm";
 
 // Mock functions to use in place of the actual submit and toggleForm props
@@ -7,8 +9,13 @@ const mockToggleForm = jest.fn();
 const mockError = jest.fn();
 const mockInfo = jest.fn();
 
+jest.mock("../../services/Api", () => ({
+  login: jest.fn(),
+}));
+
 describe("LoginForm Component", () => {
   beforeEach(() => {
+    jest.clearAllMocks();
     // Render the LoginForm component before each test
     render(
       <LoginForm
@@ -43,29 +50,42 @@ describe("LoginForm Component", () => {
     expect(passwordInput.value).toBe("password123");
   });
 
-  it("calls the submit function with form data on form submission", () => {
-    // Select email and password inputs
+  it("calls the submit function with form data on successful login", async () => {
+    // Mock successful login response
+    login.mockResolvedValueOnce({
+      status: statusCode.SUCCESS,
+      message: "Login Successful",
+    });
+
+    // Select form elements
     const emailInput = screen.getByTestId("login-email");
     const passwordInput = screen.getByTestId("login-password");
-    const submitButton = screen.getByTestId("login-user-button");
+    const loginButton = screen.getByTestId("login-user-button");
 
     // Simulate user input
     fireEvent.change(emailInput, { target: { value: "user@example.com" } });
     fireEvent.change(passwordInput, { target: { value: "Password123$" } });
 
     // Simulate form submission
-    fireEvent.click(submitButton);
-    expect(submitButton.textContent).toBe("Login");
-    // Check if the submit function was called with the form data
-    expect(mockSubmit).toHaveBeenCalledWith({
+    fireEvent.click(loginButton);
+
+    // Wait for async operations to complete
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // Verify login was called with correct data
+    expect(login).toHaveBeenCalledWith({
       email: "user@example.com",
       password: "Password123$",
     });
+
+    // Verify error/info messages were cleared
+    expect(mockError).toHaveBeenCalledWith(null);
+    expect(mockInfo).toHaveBeenCalledWith(null);
   });
 
   it("toggles to Sign Up Form when 'Sign Up' button is clicked", () => {
     // Select the "Create Account" button
-    const signUpButton = screen.getByTestId("sign-up-user-form-button");
+    const signUpButton = screen.getByTestId("signup-user-form-button");
     expect(signUpButton.textContent).toBe("Sign Up");
     // Simulate button click
     fireEvent.click(signUpButton);
