@@ -23,6 +23,7 @@
     "build": "react-scripts build",
     "build:dev": "env-cmd -f .env.dev npm run-script build",
     "build:production": "env-cmd -f .env.prod npm run-script build",
+    "build:api": "PUBLIC_URL=/ BUILD_PATH='../Stickies-API/public' npm run build",
     "test": "NODE_NO_WARNINGS=1 react-scripts test --transformIgnorePatterns \"node_modules/(?!@codemirror)/\"",
     "eject": "react-scripts eject",
     "lint": "eslint .",
