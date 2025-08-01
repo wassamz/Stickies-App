@@ -17,6 +17,7 @@ function Header({ onSearch }) {
   const { user } = useUserProfile();
   const isNotesPage = location.pathname === "/notes";
   function handleLogout() {
+    localStorage.removeItem("user") 
     logout();
     navigate("/", { replace: true });
   }
