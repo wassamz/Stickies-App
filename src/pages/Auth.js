@@ -73,6 +73,7 @@ function Auth() {
     setError(null);
     setInfo(null);
     data.password = ""; // Clear the password
+    localStorage.setItem("user", JSON.stringify(data));
     setUser(data); // Save the user data in context
     navigate("/notes", {
       replace: true,
