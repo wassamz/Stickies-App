@@ -24,18 +24,20 @@ export default [
       jest: pluginJest,
     },
     rules: {
-      "react/jsx-uses-react": "off", // Not needed in React 17+
-      "react/react-in-jsx-scope": "off", // Not needed in React 17+
-      "react/prop-types": "off", // Enable if you use PropTypes
+      "react/jsx-uses-react": "off",
+      "react/react-in-jsx-scope": "off",
+      "react/prop-types": "off",
     },
   },
   {
     files: ["**/__tests__/**/*.[jt]s?(x)", "**/*.test.[jt]s?(x)"],
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+      },
+    },
     plugins: {
       jest: pluginJest,
-    },
-    env: {
-      jest: true,
     },
     rules: {
       "jest/no-disabled-tests": "warn",
