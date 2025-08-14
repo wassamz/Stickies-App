@@ -1,7 +1,7 @@
 import { DndContext, DragOverlay, closestCenter } from "@dnd-kit/core";
 import { SortableContext, rectSwappingStrategy } from "@dnd-kit/sortable";
-import { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router";
 import AddNote from "../components/AddNote";
 import Error from "../components/common/Error";
 import Footer from "../components/common/Footer";
@@ -141,8 +141,6 @@ function Notes() {
     } catch (error) {
       console.error("Failed to update order:", error);
     }
-
-    
   };
 
   const renderContent = () => {
@@ -157,7 +155,7 @@ function Notes() {
     return (
       <>
         {!editNote.content ? (
-          <AddNote onAdd={addNote}/>
+          <AddNote onAdd={addNote} />
         ) : (
           <UpdateNote note={editNote} saveUpdate={handleSaveEditNote} />
         )}

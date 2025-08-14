@@ -10,8 +10,8 @@ jest.mock("../../services/Api", () => ({
   removeNote: jest.fn(),
 }));
 
-jest.mock("react-router-dom", () => ({
-  ...jest.requireActual("react-router-dom"),
+jest.mock("react-router", () => ({
+  ...jest.requireActual("react-router"),
   useNavigate: jest.fn(),
   useLocation: jest.fn().mockReturnValue({ pathname: "/notes" }), 
 }));
@@ -27,8 +27,8 @@ describe("Notes Component", () => {
     const mockNavigate = jest.fn();
     
     // Update mocks in beforeEach
-    require("react-router-dom").useNavigate.mockReturnValue(mockNavigate);
-    require("react-router-dom").useLocation.mockReturnValue({ pathname: "/notes" });
+    require("react-router").useNavigate.mockReturnValue(mockNavigate);
+    require("react-router").useLocation.mockReturnValue({ pathname: "/notes" });
     
     useUserProfile.mockReturnValue({ user: { email: "mocktest@example.com" } });
 
@@ -80,7 +80,7 @@ describe("Notes Component", () => {
     expect(notes).toHaveBeenCalledTimes(1);
 
     // Check if navigation was attempted
-    expect(require("react-router-dom").useNavigate).toHaveBeenCalled();
+    expect(require("react-router").useNavigate).toHaveBeenCalled();
   });
 
   it("should add a new note when 'addNote' function is called", async () => {
