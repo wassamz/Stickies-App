@@ -1,33 +1,50 @@
 import globals from "globals";
-import pluginReact from "eslint-plugin-react"; // Import React plugin
-import pluginJest from "eslint-plugin-jest"; // Import Jest plugin
-import babelParser from "@babel/eslint-parser"; // Import Babel parser
+import pluginReact from "eslint-plugin-react";
+import pluginJest from "eslint-plugin-jest";
+import babelParser from "@babel/eslint-parser";
 
-
-/** @type {import('eslint').Linter.Config[]} */
 export default [
   {
-    files: ["**/*.{js,mjs,cjs,jsx}"], // Handle .js and .jsx files
+    files: ["**/*.{js,mjs,cjs,jsx}"],
     languageOptions: {
       globals: {
         ...globals.browser,
-        process: "readonly", // Specifically declare 'process' as a global variable
+        process: "readonly",
       },
-      parser: babelParser, // Use Babel parser to understand JSX
+      parser: babelParser,
       parserOptions: {
-        requireConfigFile: false, // Avoid requiring a Babel config file
+        requireConfigFile: false,
         babelOptions: {
-          presets: ["@babel/preset-react"], // Use the React preset to parse JSX
+          presets: ["@babel/preset-react"],
         },
       },
     },
+    plugins: {
+      react: pluginReact,
+      jest: pluginJest,
+    },
+    rules: {
+      "react/jsx-uses-react": "off",
+      "react/react-in-jsx-scope": "off",
+      "react/prop-types": "off",
+    },
   },
   {
-    plugins: { // Convert to object
-      react: pluginReact, // Use pluginReact as the value for 'react' namespace
-      jest: pluginJest, // Use pluginJest as the value for 'jest' namespace
+    files: ["**/__tests__/**/*.[jt]s?(x)", "**/*.test.[jt]s?(x)"],
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+      },
     },
-    // ... React-specific rules here
+    plugins: {
+      jest: pluginJest,
+    },
+    rules: {
+      "jest/no-disabled-tests": "warn",
+      "jest/no-focused-tests": "error",
+      "jest/no-identical-title": "error",
+      "jest/prefer-to-have-length": "warn",
+      "jest/valid-expect": "error",
+    },
   },
-  // ... Jest-specific rules here (if needed)
 ];
