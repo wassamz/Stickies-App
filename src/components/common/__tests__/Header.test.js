@@ -1,6 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import React from "react";
-import * as router from "react-router-dom";
+import * as router from "react-router";
 import { useUserProfile } from "../../../context/UserContext";
 import { getToken } from "../../../util/auth";
 import Header from "../Header";
@@ -11,8 +10,8 @@ const mockSetUser = jest.fn();
 const mockLocation = { pathname: "/notes" };
 
 // Mock dependencies before component imports
-jest.mock("react-router-dom", () => ({
-  ...jest.requireActual("react-router-dom"),
+jest.mock("react-router", () => ({
+  ...jest.requireActual("react-router"),
   useNavigate: () => mockNavigate,
   useLocation: jest.fn(),
 }));

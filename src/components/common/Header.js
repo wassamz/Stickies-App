@@ -1,6 +1,6 @@
 import NotesIcon from "@mui/icons-material/Notes";
 import PropTypes from "prop-types";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router";
 import { useUserProfile } from "../../context/UserContext";
 import { logout } from "../../services/Api.js";
 import Search from "./Search.js";
