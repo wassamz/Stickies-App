@@ -1,6 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import config from "../../config/config";
 import { useUserProfile } from "../../context/UserContext";
 import { checkEmail, login, signUp } from "../../services/Api";
@@ -19,8 +18,8 @@ jest.mock("../../services/Api", () => ({
 }));
 
 // Mock react-router-dom
-jest.mock("react-router-dom", () => ({
-  ...jest.requireActual("react-router-dom"),
+jest.mock("react-router", () => ({
+  ...jest.requireActual("react-router"),
   useNavigate: () => mockNavigate,
   useLocation: () => ({ pathname: "/" }),
 }));
