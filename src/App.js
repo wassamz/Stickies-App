@@ -1,44 +1,33 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { UserProvider } from "./context/UserContext";
 import Auth from "./pages/Auth";
-import Notes from "./pages/Notes";
 import ErrorPage from "./pages/ErrorPage";
+import Notes from "./pages/Notes";
 import { checkAuthLoader } from "./util/auth";
 
-const router = createBrowserRouter(
-  [
-    {
-      path: "/",
-      element: <Auth />,
-      errorElement: <ErrorPage />,
-    },
-    {
-      path: "/notes",
-      element: <Notes />,
-      loader: checkAuthLoader,
-      errorElement: <ErrorPage />,
-    },
-    {
-      path: "*",
-      element: <ErrorPage />,
-      errorElement: <ErrorPage />,
-    },
-  ],
+const router = createBrowserRouter([
   {
-    future: {
-      v7_fetcherPersist: true,
-      v7_normalizeFormMethod: true,
-      v7_partialHydration: true,
-      v7_relativeSplatPath: true,
-      v7_skipActionErrorRevalidation: true,
-    },
-  }
-);
+    path: "/",
+    element: <Auth />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/notes",
+    element: <Notes />,
+    loader: checkAuthLoader,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "*",
+    element: <ErrorPage />,
+    errorElement: <ErrorPage />,
+  },
+]);
 
 function App() {
   return (
     <UserProvider>
-      <RouterProvider router={router} future={{ v7_startTransition: true }}/>
+      <RouterProvider router={router} />
     </UserProvider>
   );
 }
