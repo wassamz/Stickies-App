@@ -17,7 +17,7 @@ jest.mock("../../services/Api", () => ({
   checkEmail: jest.fn(),
 }));
 
-// Mock react-router-dom
+// Mock react-router
 jest.mock("react-router", () => ({
   ...jest.requireActual("react-router"),
   useNavigate: () => mockNavigate,

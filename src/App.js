@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router";
 import { UserProvider } from "./context/UserContext";
 import Auth from "./pages/Auth";
 import ErrorPage from "./pages/ErrorPage";

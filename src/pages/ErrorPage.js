@@ -1,4 +1,4 @@
-import { useRouteError, useNavigate, useLocation } from "react-router-dom";
+import { useRouteError, useNavigate, useLocation } from "react-router";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
 import Error from "../components/common/Error";
